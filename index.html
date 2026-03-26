@@ -336,7 +336,42 @@
         .fade-in { animation:fadeIn 0.3s ease forwards; }
         @keyframes popIn { from{opacity:0;transform:scale(0.8);}to{opacity:1;transform:scale(1);} }
         .pop-in { animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-    </style>
+    
+        /* Form field spinners (exercise settings) */
+        .form-spin-wrap { position:relative; display:flex; align-items:center; }
+        .form-spin-wrap input { padding-right:28px; }
+        .form-spin-btns { position:absolute; right:4px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:1px; }
+        .form-spin-btn { width:20px; height:15px; background:rgba(255,255,255,0.06); border:none; border-radius:3px; color:var(--text-dim); font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+        .form-spin-btn:hover { background:var(--accent-dim); color:var(--accent); }
+
+        /* Muscle volume donut chart */
+        .donut-section { margin-bottom: 8px; }
+        .donut-toggle-row { display:flex; gap:8px; margin-bottom:16px; }
+        .donut-toggle-btn { flex:1; padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--border-light); background:var(--bg-card); color:var(--text-secondary); font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+        .donut-toggle-btn.active { background:var(--accent-dim); border-color:var(--accent-border); color:var(--accent); }
+        .donut-wrap { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+        .donut-svg-wrap { flex-shrink:0; position:relative; width:160px; height:160px; }
+        .donut-svg-wrap svg { width:160px; height:160px; transform:rotate(-90deg); }
+        .donut-center-label { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+        .donut-center-label .dcl-val { font-size:1.4rem; font-weight:800; color:var(--text-primary); }
+        .donut-center-label .dcl-sub { font-size:0.65rem; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+        .donut-legend { flex:1; min-width:150px; display:flex; flex-direction:column; gap:6px; }
+        .donut-legend-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; cursor:default; }
+        .donut-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .donut-legend-name { flex:1; color:var(--text-primary); font-weight:600; }
+        .donut-legend-val { color:var(--text-secondary); font-size:0.75rem; white-space:nowrap; }
+        .donut-empty { color:var(--text-dim); font-size:0.88rem; padding:12px 0; }
+
+        /* Session exercise ⋯ menu */
+        .ex-menu-btn { background:none; border:none; color:var(--text-dim); cursor:pointer; padding:4px 6px; border-radius:var(--radius-sm); font-size:1.1rem; line-height:1; transition:all 0.2s; flex-shrink:0; }
+        .ex-menu-btn:hover { background:var(--bg-card-hover); color:var(--text-primary); }
+        .ex-menu-dropdown { position:absolute; top:100%; right:0; background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-md); box-shadow:var(--shadow); z-index:200; min-width:180px; overflow:hidden; }
+        .ex-menu-item { display:flex; align-items:center; gap:10px; padding:12px 16px; font-size:0.88rem; font-weight:600; color:var(--text-primary); cursor:pointer; transition:background 0.15s; }
+        .ex-menu-item:hover { background:var(--bg-card-hover); }
+        .ex-menu-item svg { width:16px; height:16px; color:var(--text-secondary); flex-shrink:0; }
+        .session-ex-header { position:relative; }
+        .badge-substituted { display:inline-block; font-size:0.62rem; font-weight:700; background:rgba(243,156,18,0.15); border:1px solid rgba(243,156,18,0.35); color:#f39c12; border-radius:20px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+</style>
 </head>
 <body>
 <div id="app">
@@ -594,14 +629,14 @@
             </div>
             <div id="workout-only-fields">
                 <div class="form-row">
-                    <div class="form-group"><label class="form-label" data-i18n="warmupSets">Warm-up Sets</label><input type="number" class="form-input" id="exercise-warmup-sets" value="2" min="0" max="5" onfocus="this.select()"></div>
-                    <div class="form-group"><label class="form-label" data-i18n="workingSets">Working Sets</label><input type="number" class="form-input" id="exercise-working-sets" value="2" min="1" max="5" onfocus="this.select()"></div>
+                    <div class="form-group"><label class="form-label" data-i18n="warmupSets">Warm-up Sets</label><div class="form-spin-wrap"><input type="number" class="form-input" id="exercise-warmup-sets" value="2" min="0" max="5" onfocus="this.select()"><div class="form-spin-btns"><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-warmup-sets',1,0,5)">▲</button><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-warmup-sets',-1,0,5)">▼</button></div></div></div>
+                    <div class="form-group"><label class="form-label" data-i18n="workingSets">Working Sets</label><div class="form-spin-wrap"><input type="number" class="form-input" id="exercise-working-sets" value="2" min="1" max="5" onfocus="this.select()"><div class="form-spin-btns"><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-working-sets',1,1,10)">▲</button><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-working-sets',-1,1,10)">▼</button></div></div></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label class="form-label" data-i18n="repRange">Rep Range</label><input type="text" class="form-input" id="exercise-rep-range" placeholder="e.g. 5-8" onfocus="this.select()"></div>
-                    <div class="form-group"><label class="form-label" data-i18n="targetReps">Target Reps</label><input type="number" class="form-input" id="exercise-target-reps" placeholder="e.g. 6" min="1" max="30" onfocus="this.select()"></div>
+                    <div class="form-group"><label class="form-label" data-i18n="targetReps">Target Reps</label><div class="form-spin-wrap"><input type="number" class="form-input" id="exercise-target-reps" placeholder="e.g. 6" min="1" max="30" onfocus="this.select()"><div class="form-spin-btns"><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-target-reps',1,1,30)">▲</button><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-target-reps',-1,1,30)">▼</button></div></div></div>
                 </div>
-                <div class="form-group"><label class="form-label" data-i18n="targetWeight">Target Weight (kg)</label><input type="number" class="form-input" id="exercise-target-weight" placeholder="e.g. 80" min="-500" step="0.5" onfocus="this.select()"></div>
+                <div class="form-group"><label class="form-label" data-i18n="targetWeight">Target Weight (kg)</label><div class="form-spin-wrap"><input type="number" class="form-input" id="exercise-target-weight" placeholder="e.g. 80" min="-500" step="0.5" onfocus="this.select()"><div class="form-spin-btns"><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-target-weight',0.5,-500,2000)">▲</button><button type="button" class="form-spin-btn" onclick="stepFormField('exercise-target-weight',-0.5,-500,2000)">▼</button></div></div></div>
             </div>
             <div class="form-group"><label class="form-label" data-i18n="exerciseNotes">Notes</label><textarea class="form-input" id="exercise-notes" placeholder="e.g. Neutral grip, 3 sec eccentric…"></textarea></div>
             <div class="modal-actions">
@@ -790,6 +825,8 @@ const TRANSLATIONS = {
         exerciseType_pin_machine:'Pin-Loaded Machine', exerciseType_plate_machine:'Plate-Loaded Machine',
         exerciseType_bodyweight:'Bodyweight', exerciseType_bodyweight_weighted:'Bodyweight (Weighted)',
         exerciseType_cable:'Cable', exerciseType_other:'Other',
+        muscleVolumeTitle:'Volume by Muscle Group',
+        reorderSession:'Reorder Exercises', replaceExercise:'Replace Exercise',
     },
     cs:{
         myWorkouts:'Moje tréninky', newMeso:'Nový blok', workout:'Trénink',
@@ -832,6 +869,8 @@ const TRANSLATIONS = {
         exerciseType_pin_machine:'Stroj (závaží)', exerciseType_plate_machine:'Stroj (kotouče)',
         exerciseType_bodyweight:'Vlastní váha', exerciseType_bodyweight_weighted:'Vlastní váha (zátěž)',
         exerciseType_cable:'Kladka', exerciseType_other:'Ostatní',
+        muscleVolumeTitle:'Objem podle svalových skupin',
+        reorderSession:'Změnit pořadí cviků', replaceExercise:'Nahradit cvik',
     }
 };
 
@@ -1009,6 +1048,13 @@ function openModal(id){
 function closeModal(id){
     document.getElementById(id).classList.remove('open');
     document.body.style.overflow='';
+    if(id==='modal-exercise'){
+        const el=document.getElementById('modal-exercise');
+        if(el.dataset.context==='replace'){
+            el.dataset.context='';
+            replacingExIdx=null;
+        }
+    }
 }
 document.querySelectorAll('.modal-overlay').forEach(o=>{
     o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});
@@ -1264,6 +1310,7 @@ function openReorderModal(){
         setupReorderDrag(item,idx);
         list.appendChild(item);
     });
+    document.getElementById('modal-reorder').dataset.context='template';
     openModal('modal-reorder');
 }
 let reorderDragSrc=null;
@@ -1288,7 +1335,9 @@ function setupReorderDrag(item,idx){
         const touch=e.touches[0]; startY=touch.clientY; origRect=item.getBoundingClientRect();
         clone=item.cloneNode(true);
         clone.style.cssText=`position:fixed;top:${origRect.top}px;left:${origRect.left}px;width:${origRect.width}px;opacity:0.85;z-index:9999;pointer-events:none;background:var(--bg-card-hover);border:1px solid var(--accent);border-radius:var(--radius-md);`;
-        document.body.appendChild(clone); item.style.opacity='0.3'; e.preventDefault();
+        document.body.appendChild(clone); item.style.opacity='0.3';
+        document.querySelectorAll('.modal-overlay').forEach(o=>o.style.overflow='hidden');
+        e.preventDefault();
     },{passive:false});
     item.addEventListener('touchmove',e=>{
         if(!clone)return; const touch=e.touches[0];
@@ -1300,6 +1349,7 @@ function setupReorderDrag(item,idx){
     },{passive:false});
     item.addEventListener('touchend',e=>{
         if(!clone)return; const touch=e.changedTouches[0]; clone.remove(); clone=null; item.style.opacity='';
+        document.querySelectorAll('.modal-overlay').forEach(o=>o.style.overflow='');
         document.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));
         const under=document.elementFromPoint(touch.clientX,touch.clientY);
         const tEl=under?.closest('.reorder-item'); if(!tEl||tEl===item)return;
@@ -1309,7 +1359,108 @@ function setupReorderDrag(item,idx){
         openReorderModal();
     });
 }
-function saveReorder(){ saveDB(); closeModal('modal-reorder'); renderTemplate(currentWorkoutId); showToast(t('save')+'!','success'); }
+function saveReorder(){
+    const ctx=document.getElementById('modal-reorder').dataset.context;
+    if(ctx==='session'){
+        saveActiveSession(); closeModal('modal-reorder'); renderSessionExercises();
+        showToast(t('save')+'!','success');
+    } else {
+        saveDB(); closeModal('modal-reorder'); renderTemplate(currentWorkoutId);
+        showToast(t('save')+'!','success');
+    }
+    document.getElementById('modal-reorder').dataset.context='';
+}
+// ── SESSION EXERCISE MENU ──
+function toggleExMenu(e,exIdx){
+    e.stopPropagation();
+    const menu=document.getElementById(`ex-menu-${exIdx}`);
+    const isOpen=menu.style.display!=='none';
+    closeAllExMenus();
+    if(!isOpen)menu.style.display='block';
+}
+function closeAllExMenus(){
+    document.querySelectorAll('.ex-menu-dropdown').forEach(m=>m.style.display='none');
+}
+document.addEventListener('click',()=>closeAllExMenus());
+
+// ── SESSION REORDER ──
+function openSessionReorderModal(){
+    if(!activeSession)return;
+    const list=document.getElementById('reorder-list'); list.innerHTML='';
+    activeSession.exercises.forEach((ex,idx)=>{
+        const item=document.createElement('div'); item.className='reorder-item'; item.dataset.idx=idx; item.setAttribute('draggable','true');
+        item.innerHTML=`<div class="reorder-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+            <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${ex.exerciseName}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);">${TYPE_ICONS[ex.exerciseType]||'•'}</div></div>`;
+        setupSessionReorderDrag(item,idx);
+        list.appendChild(item);
+    });
+    // Store context so saveReorder knows it's a session reorder
+    document.getElementById('modal-reorder').dataset.context='session';
+    openModal('modal-reorder');
+}
+let sessionReorderDragSrc=null;
+function setupSessionReorderDrag(item,idx){
+    item.addEventListener('dragstart',e=>{sessionReorderDragSrc=idx;item.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    item.addEventListener('dragend',()=>{item.classList.remove('dragging');document.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));});
+    item.addEventListener('dragover',e=>{e.preventDefault();item.classList.add('drag-over');});
+    item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
+    item.addEventListener('drop',e=>{
+        e.preventDefault();item.classList.remove('drag-over');
+        const tIdx=parseInt(item.dataset.idx);
+        if(sessionReorderDragSrc!==null&&sessionReorderDragSrc!==tIdx){
+            const[m]=activeSession.exercises.splice(sessionReorderDragSrc,1);
+            activeSession.exercises.splice(tIdx,0,m);
+            saveActiveSession(); openSessionReorderModal();
+        }
+        sessionReorderDragSrc=null;
+    });
+    // Touch
+    let startY,clone,origRect;
+    item.addEventListener('touchstart',e=>{
+        const touch=e.touches[0]; startY=touch.clientY; origRect=item.getBoundingClientRect();
+        clone=item.cloneNode(true);
+        clone.style.cssText=`position:fixed;top:${origRect.top}px;left:${origRect.left}px;width:${origRect.width}px;opacity:0.85;z-index:9999;pointer-events:none;background:var(--bg-card-hover);border:1px solid var(--accent);border-radius:var(--radius-md);`;
+        document.body.appendChild(clone); item.style.opacity='0.3';
+        document.querySelectorAll('.modal-overlay').forEach(o=>o.style.overflow='hidden');
+        e.preventDefault();
+    },{passive:false});
+    item.addEventListener('touchmove',e=>{
+        if(!clone)return; const touch=e.touches[0];
+        clone.style.top=(origRect.top+touch.clientY-startY)+'px';
+        clone.style.display='none'; const under=document.elementFromPoint(touch.clientX,touch.clientY); clone.style.display='';
+        document.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));
+        const tEl=under?.closest('.reorder-item'); if(tEl&&tEl!==item)tEl.classList.add('drag-over');
+        e.preventDefault();
+    },{passive:false});
+    item.addEventListener('touchend',e=>{
+        if(!clone)return; const touch=e.changedTouches[0]; clone.remove(); clone=null; item.style.opacity='';
+        document.querySelectorAll('.modal-overlay').forEach(o=>o.style.overflow='');
+        document.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));
+        const under=document.elementFromPoint(touch.clientX,touch.clientY);
+        const tEl=under?.closest('.reorder-item'); if(!tEl||tEl===item)return;
+        const tIdx=parseInt(tEl.dataset.idx); if(isNaN(tIdx)||tIdx===idx)return;
+        const[m]=activeSession.exercises.splice(idx,1); activeSession.exercises.splice(tIdx,0,m);
+        saveActiveSession(); openSessionReorderModal();
+    });
+}
+
+// ── REPLACE EXERCISE ──
+let replacingExIdx=null;
+function openReplaceExerciseModal(exIdx){
+    replacingExIdx=exIdx;
+    savingToLibraryOnly=false; editingExerciseId=null;
+    resetExerciseForm();
+    document.getElementById('modal-exercise-title').textContent=t('replaceExercise');
+    document.getElementById('exercise-source-selector').style.display='block';
+    document.getElementById('tab-new-exercise').classList.add('active');
+    document.getElementById('tab-library-exercise').classList.remove('active');
+    document.getElementById('modal-exercise').dataset.context='replace';
+    // Hide set/rep/weight fields — we keep existing targets
+    document.getElementById('workout-only-fields').style.display='none';
+    buildMuscleGrids(); openModal('modal-exercise');
+}
+
 
 // ── HISTORY ──
 function renderHistory(){
@@ -1434,9 +1585,15 @@ function openAddLibraryExerciseModal(){
 function renderProgress(){
     const content=document.getElementById('progress-content'); content.innerHTML='';
     if(!db.sessions.length){content.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p>${t('noData')}</p></div>`;return;}
-    const vs=document.createElement('div'); vs.className='progress-section';
-    vs.innerHTML=`<div class="section-title" style="margin-top:0;">${t('volumePerWeek')}</div>`;
-    vs.appendChild(buildVolumeChart()); content.appendChild(vs);
+    const vs=document.createElement('div'); vs.className='progress-section donut-section';
+    vs.innerHTML=`<div class="section-title" style="margin-top:0;">${t('muscleVolumeTitle')}</div>
+        <div class="donut-toggle-row">
+            <button class="donut-toggle-btn active" id="donut-btn-meso" onclick="switchDonutScope('meso')">${t('thisMeso')}</button>
+            <button class="donut-toggle-btn" id="donut-btn-all" onclick="switchDonutScope('alltime')">${t('allTime')}</button>
+        </div>
+        <div id="donut-chart-wrap"></div>`;
+    content.appendChild(vs);
+    renderDonutChart('meso');
     const ps=document.createElement('div'); ps.className='progress-section';
     const tabs=document.createElement('div'); tabs.className='tab-row';
     tabs.innerHTML=`<button class="tab-btn active" id="pr-tab-all" onclick="switchPRTab('alltime')">${t('prAllTime')}</button><button class="tab-btn" id="pr-tab-meso" onclick="switchPRTab('meso')">${t('prThisMeso')}</button>`;
@@ -1467,19 +1624,63 @@ function renderPRList(tab){
         el.appendChild(card);
     });
 }
-function buildVolumeChart(){
-    const wrap=document.createElement('div'); wrap.className='vol-chart-wrap';
-    const weeks={}; const now=new Date();
-    for(let i=7;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i*7);const k=weekKey(d);weeks[k]={label:weekLabel(d),vol:0,isCurrent:i===0};}
-    for(const sess of db.sessions){const k=weekKey(new Date(sess.date));if(weeks[k])weeks[k].vol+=sess.exercises.reduce((a,e)=>a+(e.sets||[]).filter(s=>s.type==='working').reduce((b,s)=>b+((s.weight||0)*(s.reps||0)),0),0);}
-    const vals=Object.values(weeks); const maxVol=Math.max(...vals.map(v=>v.vol),1);
-    const chart=document.createElement('div'); chart.className='bar-chart';
-    vals.forEach(w=>{const pct=Math.round((w.vol/maxVol)*100);const col=document.createElement('div');col.className='bar-chart-col';col.innerHTML=`<div class="bar-chart-bar ${w.isCurrent?'current':''}" style="height:${Math.max(pct,2)}%;" title="${w.vol.toLocaleString()}kg"></div><div class="bar-chart-label">${w.label}</div>`;chart.appendChild(col);});
-    wrap.appendChild(chart);
-    const totalVol=vals.reduce((a,v)=>a+v.vol,0);
-    const stats=document.createElement('div'); stats.style.cssText='display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;';
-    stats.innerHTML=`<span class="badge badge-accent">${db.sessions.length} ${t('sessions')}</span><span class="badge badge-blue">${totalVol.toLocaleString()}kg ${t('allTime')}</span>`;
-    wrap.appendChild(stats); return wrap;
+function switchDonutScope(scope){
+    document.getElementById('donut-btn-meso').classList.toggle('active',scope==='meso');
+    document.getElementById('donut-btn-all').classList.toggle('active',scope==='alltime');
+    renderDonutChart(scope);
+}
+function renderDonutChart(scope){
+    const wrap=document.getElementById('donut-chart-wrap'); if(!wrap)return; wrap.innerHTML='';
+    const am=getActiveMeso();
+    const sessions=scope==='meso'&&am?getSessionsForMeso(am.id):db.sessions;
+    // Accumulate sets per muscle group
+    const COLORS=["#e94560", "#3498db", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c", "#e67e22", "#e74c3c", "#27ae60", "#8e44ad", "#2980b9", "#d35400", "#16a085", "#c0392b", "#7f8c8d"];
+    const scores={};
+    for(const sess of sessions){
+        for(const ex of sess.exercises){
+            const libEntry=getLibraryEntry(ex.exerciseName);
+            const primary=libEntry?.primaryMuscle||null;
+            const secondary=libEntry?.secondaryMuscles||[];
+            const workingSets=(ex.sets||[]).filter(s=>s.type==='working').length;
+            if(workingSets===0)continue;
+            if(primary)scores[primary]=(scores[primary]||0)+workingSets*1;
+            for(const m of secondary)scores[m]=(scores[m]||0)+workingSets*0.5;
+        }
+    }
+    const total=Object.values(scores).reduce((a,b)=>a+b,0);
+    if(!total){wrap.innerHTML=`<div class="donut-empty">${t('noData')}</div>`;return;}
+    // Build sorted entries
+    const entries=MUSCLE_GROUPS.map((mg,i)=>({name:mg,val:scores[mg]||0,color:COLORS[i]||'#888'})).filter(e=>e.val>0).sort((a,b)=>b.val-a.val);
+    // Draw SVG donut
+    const R=60,r=38,cx=80,cy=80,circ=2*Math.PI*R;
+    let svgPaths=''; let offset=0;
+    for(const e of entries){
+        const pct=e.val/total;
+        const dash=pct*circ;
+        svgPaths+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${e.color}" stroke-width="22" stroke-dasharray="${dash.toFixed(2)} ${(circ-dash).toFixed(2)}" stroke-dashoffset="${(-offset*circ).toFixed(2)}" />`;
+        offset+=pct;
+    }
+    const donutDiv=document.createElement('div'); donutDiv.className='donut-wrap';
+    donutDiv.innerHTML=`
+        <div class="donut-svg-wrap">
+            <svg viewBox="0 0 160 160">
+                <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="22"/>
+                ${svgPaths}
+            </svg>
+            <div class="donut-center-label">
+                <div class="dcl-val">${total.toFixed(1)}</div>
+                <div class="dcl-sub">${t('workingShort')} Sets</div>
+            </div>
+        </div>
+        <div class="donut-legend" id="donut-legend"></div>`;
+    wrap.appendChild(donutDiv);
+    const legend=document.getElementById('donut-legend');
+    entries.forEach(e=>{
+        const pct=Math.round(e.val/total*100);
+        const item=document.createElement('div'); item.className='donut-legend-item';
+        item.innerHTML=`<div class="donut-legend-dot" style="background:${e.color}"></div><div class="donut-legend-name">${e.name}</div><div class="donut-legend-val">${e.val.toFixed(1)} (${pct}%)</div>`;
+        legend.appendChild(item);
+    });
 }
 function weekKey(date){const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay()+1);return d.toISOString().split('T')[0];}
 function weekLabel(date){const d=new Date(date);d.setDate(d.getDate()-d.getDay()+1);return `${d.getDate()}/${d.getMonth()+1}`;}
@@ -1539,7 +1740,8 @@ function buildNewSession(w){
         exercises:w.exercises.map(ex=>{
             const lastWorking=getLastWorkingSet(ex.id);
             const targetW=ex.targetWeight!=null?ex.targetWeight:(lastWorking?lastWorking.weight:null);
-            const lastData=getLastSessionDataForExercise(ex.id);
+            const _nameMatches=getSessionsForExerciseName(ex.name);
+            const lastData=_nameMatches.length?_nameMatches[0].data:getLastSessionDataForExercise(ex.id);
             const pcts=[0.50,0.75,0.85,0.90];
             // Warm-up sets: use previous warm-up weights if available, else calculate from target
             const warmupSets=[];
@@ -1581,10 +1783,21 @@ function renderSessionExercises(){
         card.innerHTML=`
             <div class="session-ex-header">
                 <div style="flex:1;min-width:0;">
-                    <div class="session-ex-name">${ex.exerciseName}</div>
+                    <div class="session-ex-name">${ex.exerciseName}${ex.substituted?'<span class="badge-substituted">subbed</span>':''}</div>
                     <div class="session-ex-meta">${TYPE_ICONS[ex.exerciseType]||'•'} ${ex.sets.filter(s=>s.type==='warmup').length} ${t('warmupShort')} · ${ex.sets.filter(s=>s.type==='working').length} ${t('workingShort')}${prev1rm?` · Prev ~${prev1rm}kg 1RM`:''}</div>
                 </div>
                 ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="showToast(activeSession.exercises[${exIdx}].notes,'')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
+                <button class="ex-menu-btn" onclick="toggleExMenu(event,${exIdx})">⋯</button>
+                <div class="ex-menu-dropdown" id="ex-menu-${exIdx}" style="display:none;">
+                    <div class="ex-menu-item" onclick="openSessionReorderModal();closeAllExMenus()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                        ${t('reorderSession')}
+                    </div>
+                    <div class="ex-menu-item" onclick="openReplaceExerciseModal(${exIdx});closeAllExMenus()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                        ${t('replaceExercise')}
+                    </div>
+                </div>
             </div>
             <div class="set-rows" id="set-rows-${exIdx}"></div>`;
         body.insertBefore(card,notesRow);
@@ -1607,8 +1820,8 @@ function renderSetInputRows(exIdx){
                     onfocus="this.select()"
                     onchange="updateSet(${exIdx},${setIdx},'weight',this.value)">
                 <div class="set-inc-wrap">
-                    <button class="set-inc-btn" onclick="stepSet(${exIdx},${setIdx},'weight',1)">▲</button>
-                    <button class="set-inc-btn" onclick="stepSet(${exIdx},${setIdx},'weight',-1)">▼</button>
+                    <button class="set-inc-btn" onclick="stepSet(${exIdx},${setIdx},'weight',0.5)">▲</button>
+                    <button class="set-inc-btn" onclick="stepSet(${exIdx},${setIdx},'weight',-0.5)">▼</button>
                 </div>
             </div>
             <div class="set-input-wrap">
@@ -1650,6 +1863,13 @@ function stepSet(exIdx,setIdx,field,delta){
     saveActiveSession(); renderSetInputRows(exIdx);
 }
 function stepRIR(exIdx,setIdx,delta){ const set=activeSession.exercises[exIdx].sets[setIdx]; const cur=parseInt(set.rir); set.rir=String(Math.max(0,isNaN(cur)?delta>0?1:0:cur+delta)); saveActiveSession(); renderSetInputRows(exIdx); }
+function stepFormField(id,delta,mn,mx){
+    const el=document.getElementById(id); if(!el)return;
+    const cur=parseFloat(el.value)||0;
+    const next=Math.round((cur+delta)*100)/100;
+    el.value=Math.min(mx,Math.max(mn,next));
+}
+
 function updateSet(exIdx,setIdx,field,value){ if(!activeSession)return; const set=activeSession.exercises[exIdx].sets[setIdx]; if(field==='weight')set.weight=value!==''?parseFloat(value):null; else if(field==='reps')set.reps=parseInt(value)||null; else set[field]=value; saveActiveSession(); }
 function toggleLogSet(exIdx,setIdx){
     if(!activeSession)return;
@@ -1903,6 +2123,25 @@ function saveExercise(){
         });
     }
     if(savingToLibraryOnly){ upsertLibraryEntry(data);saveDB();closeModal('modal-exercise');renderLibrary();showToast(currentLang==='cs'?'Cvik přidán!':'Exercise added!','success');return; }
+    // Handle replace-exercise-in-session context
+    const exCtx=document.getElementById('modal-exercise').dataset.context;
+    if(exCtx==='replace'&&replacingExIdx!==null&&activeSession){
+        const ex=activeSession.exercises[replacingExIdx];
+        ex.exerciseName=data.name;
+        ex.exerciseType=data.exerciseType||'other';
+        ex.notes=data.notes||'';
+        ex.substituted=true;
+        // keep existing sets (targets unchanged), just update exerciseId to 0 so name-based lookup is used
+        ex.exerciseId='replaced_'+uid();
+        upsertLibraryEntry(data);
+        saveActiveSession();
+        document.getElementById('modal-exercise').dataset.context='';
+        replacingExIdx=null;
+        closeModal('modal-exercise');
+        renderSessionExercises();
+        showToast(currentLang==='cs'?'Cvik nahrazen!':'Exercise replaced!','success');
+        return;
+    }
     const w=getWorkout(currentWorkoutId); if(!w)return;
     if(editingExerciseId){const ex=w.exercises.find(e=>e.id===editingExerciseId);if(ex)Object.assign(ex,data);showToast(t('save')+'!','success');}
     else{w.exercises.push({id:uid(),...data});showToast(t('addExercise')+'!','success');}
