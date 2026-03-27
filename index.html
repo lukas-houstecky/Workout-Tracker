@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+             <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -362,7 +362,7 @@
         .donut-legend-val { color:var(--text-secondary); font-size:0.75rem; white-space:nowrap; }
         .donut-empty { color:var(--text-dim); font-size:0.88rem; padding:12px 0; }
 
-        /* Session exercise menu */
+        /* Session exercise ⋯ menu */
         .ex-menu-btn { background:none; border:none; color:var(--text-dim); cursor:pointer; padding:4px 6px; border-radius:var(--radius-sm); font-size:1.1rem; line-height:1; transition:all 0.2s; flex-shrink:0; }
         .ex-menu-btn:hover { background:var(--bg-card-hover); color:var(--text-primary); }
         .ex-menu-dropdown { position:absolute; top:100%; right:0; background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-md); box-shadow:var(--shadow); z-index:200; min-width:180px; overflow:hidden; }
@@ -371,10 +371,6 @@
         .ex-menu-item svg { width:16px; height:16px; color:var(--text-secondary); flex-shrink:0; }
         .session-ex-header { position:relative; }
         .badge-substituted { display:inline-block; font-size:0.62rem; font-weight:700; background:rgba(243,156,18,0.15); border:1px solid rgba(243,156,18,0.35); color:#f39c12; border-radius:20px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
-
-        /* Reorder drag — prevent page scroll on mobile */
-        .reorder-item { touch-action: none; }
-        .reorder-handle, .reorder-drag-handle { touch-action: none; }
 </style>
 </head>
 <body>
@@ -1054,8 +1050,9 @@ function closeModal(id){
     document.body.style.overflow='';
     if(id==='modal-exercise'){
         const el=document.getElementById('modal-exercise');
-        if(el&&el.dataset.context==='replace'){
-            el.dataset.context=''; replacingExIdx=null;
+        if(el.dataset.context==='replace'){
+            el.dataset.context='';
+            replacingExIdx=null;
         }
     }
 }
@@ -1063,6 +1060,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{
     o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);});
 });
 
+let reorderDragging=false;
 function setupSwipeToDismiss(overlay){
     const modal=overlay.querySelector('.modal');
     if(!modal||modal._swipeSetup)return;
@@ -1073,6 +1071,7 @@ function setupSwipeToDismiss(overlay){
         startScrollTop=modal.scrollTop;
     },{passive:true});
     modal.addEventListener('touchmove',e=>{
+        if(reorderDragging)return; // reorder drag in progress — don't dismiss
         const dy=e.touches[0].clientY-startY;
         if(dy>0&&startScrollTop===0){
             e.preventDefault();
@@ -1081,6 +1080,7 @@ function setupSwipeToDismiss(overlay){
         }
     },{passive:false});
     modal.addEventListener('touchend',e=>{
+        if(reorderDragging)return;
         const dy=e.changedTouches[0].clientY-startY;
         modal.style.transition='';
         modal.style.transform='';
@@ -1339,7 +1339,7 @@ function setupReorderDrag(item,idx){
         clone=item.cloneNode(true);
         clone.style.cssText=`position:fixed;top:${origRect.top}px;left:${origRect.left}px;width:${origRect.width}px;opacity:0.85;z-index:9999;pointer-events:none;background:var(--bg-card-hover);border:1px solid var(--accent);border-radius:var(--radius-md);`;
         document.body.appendChild(clone); item.style.opacity='0.3';
-        document.body.style.overflow='hidden';
+        reorderDragging=true; document.body.style.overflow='hidden';
         e.preventDefault();
     },{passive:false});
     item.addEventListener('touchmove',e=>{
@@ -1352,7 +1352,7 @@ function setupReorderDrag(item,idx){
     },{passive:false});
     item.addEventListener('touchend',e=>{
         if(!clone)return; const touch=e.changedTouches[0]; clone.remove(); clone=null; item.style.opacity='';
-        document.body.style.overflow='';
+        reorderDragging=false; document.body.style.overflow='';
         document.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));
         const under=document.elementFromPoint(touch.clientX,touch.clientY);
         const tEl=under?.closest('.reorder-item'); if(!tEl||tEl===item)return;
@@ -1373,12 +1373,10 @@ function saveReorder(){
     }
     document.getElementById('modal-reorder').dataset.context='';
 }
-
 // ── SESSION EXERCISE MENU ──
-let replacingExIdx=null;
 function toggleExMenu(e,exIdx){
     e.stopPropagation();
-    const menu=document.getElementById('ex-menu-'+exIdx);
+    const menu=document.getElementById(`ex-menu-${exIdx}`);
     const isOpen=menu.style.display!=='none';
     closeAllExMenus();
     if(!isOpen)menu.style.display='block';
@@ -1393,13 +1391,14 @@ function openSessionReorderModal(){
     if(!activeSession)return;
     const list=document.getElementById('reorder-list'); list.innerHTML='';
     activeSession.exercises.forEach((ex,idx)=>{
-        const item=document.createElement('div'); item.className='reorder-item'; item.dataset.idx=idx; item.setAttribute('draggable','true');
+        const item=document.createElement('div'); item.className='reorder-item'; item.dataset.idx=idx;
         item.innerHTML=`<div class="reorder-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
             <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${ex.exerciseName}</div>
             <div style="font-size:0.75rem;color:var(--text-dim);">${TYPE_ICONS[ex.exerciseType]||'•'}</div></div>`;
         setupSessionReorderDrag(item,idx);
         list.appendChild(item);
     });
+    // Store context so saveReorder knows it's a session reorder
     document.getElementById('modal-reorder').dataset.context='session';
     openModal('modal-reorder');
 }
@@ -1419,13 +1418,14 @@ function setupSessionReorderDrag(item,idx){
         }
         sessionReorderDragSrc=null;
     });
+    // Touch
     let startY,clone,origRect;
     item.addEventListener('touchstart',e=>{
         const touch=e.touches[0]; startY=touch.clientY; origRect=item.getBoundingClientRect();
         clone=item.cloneNode(true);
         clone.style.cssText=`position:fixed;top:${origRect.top}px;left:${origRect.left}px;width:${origRect.width}px;opacity:0.85;z-index:9999;pointer-events:none;background:var(--bg-card-hover);border:1px solid var(--accent);border-radius:var(--radius-md);`;
         document.body.appendChild(clone); item.style.opacity='0.3';
-        document.body.style.overflow='hidden';
+        reorderDragging=true; document.body.style.overflow='hidden';
         e.preventDefault();
     },{passive:false});
     item.addEventListener('touchmove',e=>{
@@ -1438,7 +1438,7 @@ function setupSessionReorderDrag(item,idx){
     },{passive:false});
     item.addEventListener('touchend',e=>{
         if(!clone)return; const touch=e.changedTouches[0]; clone.remove(); clone=null; item.style.opacity='';
-        document.body.style.overflow='';
+        reorderDragging=false; document.body.style.overflow='';
         document.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));
         const under=document.elementFromPoint(touch.clientX,touch.clientY);
         const tEl=under?.closest('.reorder-item'); if(!tEl||tEl===item)return;
@@ -1449,6 +1449,7 @@ function setupSessionReorderDrag(item,idx){
 }
 
 // ── REPLACE EXERCISE ──
+let replacingExIdx=null;
 function openReplaceExerciseModal(exIdx){
     replacingExIdx=exIdx;
     savingToLibraryOnly=false; editingExerciseId=null;
@@ -1458,9 +1459,11 @@ function openReplaceExerciseModal(exIdx){
     document.getElementById('tab-new-exercise').classList.add('active');
     document.getElementById('tab-library-exercise').classList.remove('active');
     document.getElementById('modal-exercise').dataset.context='replace';
+    // Hide set/rep/weight fields — we keep existing targets
     document.getElementById('workout-only-fields').style.display='none';
     buildMuscleGrids(); openModal('modal-exercise');
 }
+
 
 // ── HISTORY ──
 function renderHistory(){
@@ -1633,6 +1636,7 @@ function renderDonutChart(scope){
     const wrap=document.getElementById('donut-chart-wrap'); if(!wrap)return; wrap.innerHTML='';
     const am=getActiveMeso();
     const sessions=scope==='meso'&&am?getSessionsForMeso(am.id):db.sessions;
+    // Accumulate sets per muscle group
     const COLORS=["#e94560", "#3498db", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c", "#e67e22", "#e74c3c", "#27ae60", "#8e44ad", "#2980b9", "#d35400", "#16a085", "#c0392b", "#7f8c8d"];
     const scores={};
     for(const sess of sessions){
@@ -1648,8 +1652,10 @@ function renderDonutChart(scope){
     }
     const total=Object.values(scores).reduce((a,b)=>a+b,0);
     if(!total){wrap.innerHTML=`<div class="donut-empty">${t('noData')}</div>`;return;}
+    // Build sorted entries
     const entries=MUSCLE_GROUPS.map((mg,i)=>({name:mg,val:scores[mg]||0,color:COLORS[i]||'#888'})).filter(e=>e.val>0).sort((a,b)=>b.val-a.val);
-    const R=60,cx=80,cy=80,circ=2*Math.PI*R;
+    // Draw SVG donut
+    const R=60,r=38,cx=80,cy=80,circ=2*Math.PI*R;
     let svgPaths=''; let offset=0;
     for(const e of entries){
         const pct=e.val/total;
@@ -1679,7 +1685,6 @@ function renderDonutChart(scope){
         legend.appendChild(item);
     });
 }
-
 function weekKey(date){const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay()+1);return d.toISOString().split('T')[0];}
 function weekLabel(date){const d=new Date(date);d.setDate(d.getDate()-d.getDay()+1);return `${d.getDate()}/${d.getMonth()+1}`;}
 function buildAchievements(){
@@ -2121,15 +2126,24 @@ function saveExercise(){
         });
     }
     if(savingToLibraryOnly){ upsertLibraryEntry(data);saveDB();closeModal('modal-exercise');renderLibrary();showToast(currentLang==='cs'?'Cvik přidán!':'Exercise added!','success');return; }
+    // Handle replace-exercise-in-session context
     const exCtx=document.getElementById('modal-exercise').dataset.context;
     if(exCtx==='replace'&&replacingExIdx!==null&&activeSession){
         const ex=activeSession.exercises[replacingExIdx];
-        ex.exerciseName=data.name; ex.exerciseType=data.exerciseType||'other'; ex.notes=data.notes||'';
-        ex.substituted=true; ex.exerciseId='replaced_'+uid();
-        upsertLibraryEntry(data); saveActiveSession();
-        document.getElementById('modal-exercise').dataset.context=''; replacingExIdx=null;
-        closeModal('modal-exercise'); renderSessionExercises();
-        showToast(currentLang==='cs'?'Cvik nahrazen!':'Exercise replaced!','success'); return;
+        ex.exerciseName=data.name;
+        ex.exerciseType=data.exerciseType||'other';
+        ex.notes=data.notes||'';
+        ex.substituted=true;
+        // keep existing sets (targets unchanged), just update exerciseId to 0 so name-based lookup is used
+        ex.exerciseId='replaced_'+uid();
+        upsertLibraryEntry(data);
+        saveActiveSession();
+        document.getElementById('modal-exercise').dataset.context='';
+        replacingExIdx=null;
+        closeModal('modal-exercise');
+        renderSessionExercises();
+        showToast(currentLang==='cs'?'Cvik nahrazen!':'Exercise replaced!','success');
+        return;
     }
     const w=getWorkout(currentWorkoutId); if(!w)return;
     if(editingExerciseId){const ex=w.exercises.find(e=>e.id===editingExerciseId);if(ex)Object.assign(ex,data);showToast(t('save')+'!','success');}
