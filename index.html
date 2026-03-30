@@ -253,14 +253,14 @@
         .set-input:focus { border-color:var(--accent); }
         .set-input.logged { border-color:rgba(46,204,113,0.5); background:rgba(46,204,113,0.05); }
         .set-inc-wrap { position:absolute; right:2px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:1px; }
-        .set-inc-btn { width:28px; height:22px; background:rgba(255,255,255,0.06); border:none; border-radius:3px; color:var(--text-dim); font-size:0.65rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+        .set-inc-btn { width:20px; height:15px; background:rgba(255,255,255,0.06); border:none; border-radius:3px; color:var(--text-dim); font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
         .set-inc-btn:hover { background:var(--accent-dim); color:var(--accent); }
 
         .rir-wrap { position:relative; display:flex; align-items:center; }
         .rir-input { width:100%; padding:7px 24px 7px 8px; background:var(--bg-primary); border:1.5px solid var(--border-light); border-radius:var(--radius-sm); color:var(--text-primary); font-size:0.85rem; outline:none; text-align:center; transition:border-color 0.2s; }
         .rir-input:focus { border-color:var(--yellow); }
         .rir-inc-wrap { position:absolute; right:2px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:1px; }
-        .rir-inc-btn { width:28px; height:18px; background:rgba(255,255,255,0.06); border:none; border-radius:3px; color:var(--text-dim); font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .rir-inc-btn { width:20px; height:15px; background:rgba(255,255,255,0.06); border:none; border-radius:3px; color:var(--text-dim); font-size:0.6rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .rir-inc-btn:hover { background:var(--yellow-dim); color:var(--yellow); }
 
         .set-log-btn { width:36px; height:36px; border-radius:var(--radius-sm); border:1.5px solid var(--border-light); background:var(--bg-primary); color:var(--text-dim); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -381,7 +381,7 @@
         .per-set-target-input:focus { border-color:var(--accent); }
         .per-set-target-header { display:grid; grid-template-columns:40px 1fr 1fr 1fr; gap:8px; padding:0 0 4px; }
         .per-set-target-header span { font-size:0.65rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; }
-        .rir-target-hint { font-size:0.72rem; color:var(--text-dim); white-space:nowrap; padding-left:2px; font-style:italic; }
+        .rir-target-hint { font-size:0.7rem; color:var(--text-dim); font-style:italic; padding:2px 0 4px 4px; display:block; }
 </style>
 </head>
 <body>
@@ -1339,9 +1339,10 @@ function renderPerSetTargets(ex, wid){
             <input type="number" class="per-set-target-input" placeholder="${ex.targetReps||'—'}"
                 value="${s.reps!=null?s.reps:''}" min="1" max="100"
                 onchange="savePerSetTarget('${wid}','${ex.id}',${i},'reps',this.value)">
-            <input type="number" class="per-set-target-input" placeholder="—"
-                value="${s.rir!=null?s.rir:''}" min="0" max="10"
-                onchange="savePerSetTarget('${wid}','${ex.id}',${i},'rir',this.value)">
+            <input type="text" class="per-set-target-input" placeholder="e.g. 2"
+                value="${s.rir!=null?s.rir:''}"
+                onchange="savePerSetTarget('${wid}','${ex.id}',${i},'rir',this.value)"
+                onkeydown="handlePerSetRirKey(event,'${wid}','${ex.id}',${i})">
         </div>`;
     }
     container.innerHTML=html;
@@ -1351,8 +1352,36 @@ function savePerSetTarget(wid,eid,idx,field,val){
     const ex=getExercise(wid,eid); if(!ex)return;
     if(!ex.perSetTargets)ex.perSetTargets=[];
     while(ex.perSetTargets.length<=idx)ex.perSetTargets.push({});
-    ex.perSetTargets[idx][field]=val===''?null:parseFloat(val);
+    // RIR field is text (supports ranges like "1-2"), others are numeric
+    if(field==='rir') ex.perSetTargets[idx][field]=val===''?null:val;
+    else ex.perSetTargets[idx][field]=val===''?null:parseFloat(val);
     saveDB();
+}
+function handlePerSetRirKey(e,wid,eid,idx){
+    if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+    e.preventDefault();
+    const delta=e.key==='ArrowUp'?1:-1;
+    const ex=getExercise(wid,eid); if(!ex)return;
+    if(!ex.perSetTargets)ex.perSetTargets=[];
+    while(ex.perSetTargets.length<=idx)ex.perSetTargets.push({});
+    const cur=ex.perSetTargets[idx].rir;
+    let newVal;
+    if(cur==null||cur===''){
+        newVal=delta>0?'1':'0';
+    } else if(String(cur).includes('-')){
+        // Range like "1-2" — shift both numbers
+        const parts=String(cur).split('-').map(p=>parseInt(p.trim()));
+        if(parts.length===2&&!isNaN(parts[0])&&!isNaN(parts[1])){
+            const lo=Math.max(0,parts[0]+delta);
+            const hi=Math.max(lo,parts[1]+delta);
+            newVal=`${lo}-${hi}`;
+        } else newVal=cur;
+    } else {
+        newVal=String(Math.max(0,parseInt(cur)+delta));
+    }
+    ex.perSetTargets[idx].rir=newVal;
+    saveDB();
+    e.target.value=newVal;
 }
 
 // ── REORDER MODAL ──
@@ -1899,6 +1928,12 @@ function renderSetInputRows(exIdx){
             </button>`;
         container.appendChild(row);
         if(isWorking){
+            // Target RIR hint row — between set row and RIR/note row
+            if(set.targetRir!=null){
+                const hintRow=document.createElement('div'); hintRow.className='rir-target-hint';
+                hintRow.textContent=`${currentLang==='cs'?'Cílové RIR':'Target RIR'}: ${set.targetRir}`;
+                container.appendChild(hintRow);
+            }
             const extra=document.createElement('div'); extra.className='set-extra';
             extra.innerHTML=`
                 <div class="rir-wrap">
@@ -1910,7 +1945,6 @@ function renderSetInputRows(exIdx){
                         <button class="rir-inc-btn" onclick="stepRIR(${exIdx},${setIdx},-1)">▼</button>
                     </div>
                 </div>
-                ${set.targetRir!=null?`<span class="rir-target-hint">${currentLang==='cs'?'Cílové RIR':'Target RIR'}: ${set.targetRir}</span>`:''}
                 <input type="text" class="note-input" placeholder="${currentLang==='cs'?'Poznámka…':'Set note…'}"
                     value="${set.note||''}" onchange="updateSet(${exIdx},${setIdx},'note',this.value)">`;
             container.appendChild(extra);
