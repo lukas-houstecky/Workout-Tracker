@@ -1006,10 +1006,11 @@ function upsertLibraryEntry(data){
     if(existing){
         if(data.exerciseType)existing.exerciseType=data.exerciseType;
         if(data.primaryMuscle!==undefined)existing.primaryMuscle=data.primaryMuscle;
+        if(data.primaryMuscles!==undefined)existing.primaryMuscles=[...(data.primaryMuscles||[])];
         if(data.secondaryMuscles)existing.secondaryMuscles=data.secondaryMuscles;
         if(data.notes!==undefined)existing.notes=data.notes;
     } else {
-        db.library.push({id:uid(),name:data.name,exerciseType:data.exerciseType||'other',primaryMuscle:data.primaryMuscle||null,secondaryMuscles:data.secondaryMuscles||[],notes:data.notes||'',createdAt:new Date().toISOString()});
+        db.library.push({id:uid(),name:data.name,exerciseType:data.exerciseType||'other',primaryMuscle:data.primaryMuscle||null,primaryMuscles:[...(data.primaryMuscles||[])],secondaryMuscles:data.secondaryMuscles||[],notes:data.notes||'',createdAt:new Date().toISOString()});
     }
 }
 
@@ -2346,7 +2347,7 @@ function renderLibraryPicker(){
             document.getElementById('exercise-name-input').value=entry.name;
             document.getElementById('exercise-type').value=entry.exerciseType||'other';
             document.getElementById('exercise-notes').value=entry.notes||'';
-            selectedPrimary=entry.primaryMuscle||null; selectedSecondary=[...(entry.secondaryMuscles||[])];
+            selectedPrimary=entry.primaryMuscles&&entry.primaryMuscles.length?[...entry.primaryMuscles]:(entry.primaryMuscle?[entry.primaryMuscle]:[]); selectedSecondary=[...(entry.secondaryMuscles||[])];
             buildMuscleGrids();
         });
         list.appendChild(item);
