@@ -623,9 +623,7 @@
         </div>
     </div>
 </div>
-
 <div class="modal-overlay" id="modal-exercise-note"><div class="modal"><div class="modal-handle"></div><div class="modal-title">Exercise Notes</div><div id="note-modal-text" style="font-size:0.95rem;line-height:1.6;color:var(--text-primary);white-space:pre-wrap;padding:4px 0 16px;"></div><div class="modal-actions"><button class="btn btn-secondary btn-full" onclick="closeModal('modal-exercise-note')">Close</button></div></div></div>
-
 <div class="modal-overlay" id="modal-new-meso"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="newMesocycle">New Mesocycle</div><div style="background:var(--purple-dim);border:1px solid rgba(155,89,182,0.3);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:20px;font-size:0.85rem;color:var(--purple);" data-i18n="newMesoDesc">Starting a new mesocycle will archive your current workouts.</div><div class="form-group"><label class="form-label" data-i18n="mesocycleName">Mesocycle Name</label><input type="text" class="form-input" id="new-meso-name"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-new-meso')" data-i18n="cancel">Cancel</button><button class="btn btn-purple" onclick="createNewMesocycle()" data-i18n="createMeso">Create</button></div></div></div>
 
 <div class="modal-overlay" id="modal-edit-meso"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="editMesocycle">Edit Mesocycle</div><div class="form-group"><label class="form-label" data-i18n="mesocycleName">Name</label><input type="text" class="form-input" id="edit-meso-name"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-edit-meso')" data-i18n="cancel">Cancel</button><button class="btn btn-primary" onclick="saveEditMeso()" data-i18n="save">Save</button></div></div></div>
@@ -1039,10 +1037,11 @@ function upsertLibraryEntry(data){
     if(existing){
         if(data.exerciseType)existing.exerciseType=data.exerciseType;
         if(data.primaryMuscle!==undefined)existing.primaryMuscle=data.primaryMuscle;
+        if(data.primaryMuscles!==undefined)existing.primaryMuscles=[...(data.primaryMuscles||[])];
         if(data.secondaryMuscles)existing.secondaryMuscles=data.secondaryMuscles;
         if(data.notes!==undefined)existing.notes=data.notes;
     } else {
-        db.library.push({id:uid(),name:data.name,exerciseType:data.exerciseType||'other',primaryMuscle:data.primaryMuscle||null,secondaryMuscles:data.secondaryMuscles||[],notes:data.notes||'',createdAt:new Date().toISOString()});
+        db.library.push({id:uid(),name:data.name,exerciseType:data.exerciseType||'other',primaryMuscle:data.primaryMuscle||null,primaryMuscles:[...(data.primaryMuscles||[])],secondaryMuscles:data.secondaryMuscles||[],notes:data.notes||'',createdAt:new Date().toISOString()});
     }
 }
 
@@ -1179,8 +1178,9 @@ function togglePrimary(m){
 function toggleSecondary(m){ if(selectedSecondary.includes(m))selectedSecondary=selectedSecondary.filter(x=>x!==m); else{if(selectedSecondary.length>=3){showToast('Max 3 secondary muscles','error');return;}selectedSecondary.push(m);} buildSecondaryGrid(); }
 
 // ── SHARED HTML HELPERS ──
-function renderMuscleBadges(primary,secondary=[]){
-    return [primary?`<span class="muscle-badge">${muscleLabel(primary)}</span>`:'',...(secondary||[]).map(m=>`<span class="muscle-badge secondary">${muscleLabel(m)}</span>`)].filter(Boolean).join('');
+function renderMuscleBadges(primary,secondary=[],primaryMuscles=[]){
+    const primaries=primaryMuscles&&primaryMuscles.length?primaryMuscles:(primary?[primary]:[]);
+    return [...primaries.map(m=>`<span class="muscle-badge">${muscleLabel(m)}</span>`),...(secondary||[]).map(m=>`<span class="muscle-badge secondary">${muscleLabel(m)}</span>`)].filter(Boolean).join('');
 }
 function renderSetRows(sets){
     return (sets||[]).map(s=>`
@@ -1362,12 +1362,12 @@ function renderTemplate(workoutId){
     const list=document.getElementById('template-exercise-list'); list.innerHTML='';
     if(!w.exercises.length){list.innerHTML=`<div class="empty-state"><p>${t('noData')}</p></div>`;return;}
 
-    const renderedGroups=new Set();
     w.exercises.forEach((ex,idx)=>{
-        if(ex.supersetGroupId&&renderedGroups.has(ex.supersetGroupId))return;
+        // ── Superset group: render all members together ──
         if(ex.supersetGroupId){
-            renderedGroups.add(ex.supersetGroupId);
+            // Only render the group when we hit the FIRST member
             const groupExercises=w.exercises.filter(e=>e.supersetGroupId===ex.supersetGroupId);
+            if(groupExercises[0].id!==ex.id)return; // skip non-first members
             const color=getSupersetColor(ex.supersetGroupId);
             const wrapper=document.createElement('div');
             wrapper.className='superset-group';
@@ -1377,26 +1377,34 @@ function renderTemplate(workoutId){
             label.style.cssText=`border-color:${color};color:${color};`;
             label.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg> Superset (${groupExercises.length})`;
             wrapper.appendChild(label);
+            // Build all exercise rows and per-set-target divs first
             groupExercises.forEach(gex=>{
                 const gIdx=w.exercises.indexOf(gex);
                 const gRow=buildExerciseRow(w,gex,gIdx);
                 gRow.style.marginBottom='6px';
-                wrapper.appendChild(gRow);
+                // Create per-set div and append to row BEFORE DOM insertion
                 const pstDiv=document.createElement('div');
-                pstDiv.className='per-set-targets'; pstDiv.id=`per-set-${gex.id}`;
+                pstDiv.className='per-set-targets';
+                pstDiv.id=`per-set-${gex.id}`;
                 gRow.appendChild(pstDiv);
-                renderPerSetTargets(gex,workoutId);
+                wrapper.appendChild(gRow);
             });
+            // NOW add wrapper to DOM
             list.appendChild(wrapper);
+            // ONLY NOW call renderPerSetTargets (elements are in DOM)
+            groupExercises.forEach(gex=>{
+                renderPerSetTargets(gex, workoutId);
+            });
             return;
         }
+        // ── Solo exercise ──
         const row=buildExerciseRow(w,ex,idx);
-        list.appendChild(row);
         // Per-set targets
         const pstDiv=document.createElement('div');
         pstDiv.className='per-set-targets';
         pstDiv.id=`per-set-${ex.id}`;
         row.appendChild(pstDiv);
+        list.appendChild(row);
         renderPerSetTargets(ex, workoutId);
     });
 }
@@ -1751,7 +1759,7 @@ function renderLibrary(){
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
                 <div style="flex:1;min-width:0;">
                     <div class="library-ex-name">${entry.name}</div>
-                    <div class="library-ex-meta"><span class="type-badge">${TYPE_ICONS[entry.exerciseType]||'•'} ${exTypeLabel(entry.exerciseType)}</span>${renderMuscleBadges(entry.primaryMuscle,entry.secondaryMuscles)}</div>
+                    <div class="library-ex-meta"><span class="type-badge">${TYPE_ICONS[entry.exerciseType]||'•'} ${exTypeLabel(entry.exerciseType)}</span>${renderMuscleBadges(entry.primaryMuscle,entry.secondaryMuscles,entry.primaryMuscles)}</div>
                     <div class="library-ex-stats">${sessions.length} sessions${best?` · Best: ${best.weight}kg × ${best.reps} (~${calc1RM(best.weight,best.reps).toFixed(1)}kg 1RM)`:''}</div>
                 </div>
                 <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -1775,7 +1783,7 @@ function openLibraryDetail(name){
     const entry=getLibraryEntry(name);
     const sessions=getSessionsForExerciseName(name);
     document.getElementById('lib-detail-name').textContent=name;
-    let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"><span class="type-badge">${TYPE_ICONS[entry?.exerciseType||'other']||'•'} ${exTypeLabel(entry?.exerciseType||'other')}</span>${renderMuscleBadges(entry?.primaryMuscle,entry?.secondaryMuscles)}</div>`;
+    let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"><span class="type-badge">${TYPE_ICONS[entry?.exerciseType||'other']||'•'} ${exTypeLabel(entry?.exerciseType||'other')}</span>${renderMuscleBadges(entry?.primaryMuscle,entry?.secondaryMuscles,entry?.primaryMuscles)}</div>`;
     if(entry?.notes)html+=`<div style="background:var(--yellow-dim);border:1px solid rgba(243,156,18,0.3);border-radius:var(--radius-md);padding:12px;margin-bottom:16px;"><div style="font-size:0.72rem;font-weight:700;color:var(--yellow);text-transform:uppercase;margin-bottom:4px;">📝 Notes</div><div style="font-size:0.88rem;">${entry.notes}</div></div>`;
     const points=sessions.filter(s=>s.data?.sets?.some(x=>x.type==='working'&&x.weight!=null&&x.reps)).map(s=>{const ws=s.data.sets.filter(x=>x.type==='working'&&x.weight!=null&&x.reps);return{date:s.date,orm:Math.max(...ws.map(x=>calc1RM(x.weight,x.reps)))};}).reverse();
     if(points.length>=2)html+=`<div class="section-title" style="margin-top:0;">1RM Progression</div>${renderMiniChart(points)}`;
@@ -2041,7 +2049,7 @@ function buildSessionExCard(ex,exIdx){
                 <div class="session-ex-name">${ex.exerciseName}${ex.substituted?'<span class="badge-substituted">subbed</span>':''}</div>
                 <div class="session-ex-meta">${TYPE_ICONS[ex.exerciseType]||'•'} ${ex.sets.filter(s=>s.type==='warmup').length} ${t('warmupShort')} · ${ex.sets.filter(s=>s.type==='working').length} ${t('workingShort')}${prev1rm?` · Prev ~${prev1rm}kg 1RM`:''}</div>
             </div>
-            ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="openNoteModal(activeSession.exercises[${exIdx}].notes)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
+            ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="showToast(activeSession.exercises[${exIdx}].notes,'')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
             <button class="ex-menu-btn" onclick="toggleExMenu(event,${exIdx})">⋯</button>
             <div class="ex-menu-dropdown" id="ex-menu-${exIdx}" style="display:none;">
                 <div class="ex-menu-item" onclick="openSessionReorderModal();closeAllExMenus()">
@@ -2371,12 +2379,10 @@ function copyWorkoutText(){
 // ── SUPERSET ──
 const SS_COLORS=['#f39c12','#3498db','#2ecc71','#9b59b6','#e74c3c','#1abc9c'];
 let supersetSourceWid=null,supersetSourceEid=null,supersetPendingGroup=[];
-
 function getSupersetColor(groupId){
     let hash=0; for(let i=0;i<groupId.length;i++)hash=(hash*31+groupId.charCodeAt(i))&0xffffffff;
     return SS_COLORS[Math.abs(hash)%SS_COLORS.length];
 }
-
 function openSupersetModal(wid,eid){
     const w=getWorkout(wid); if(!w)return;
     supersetSourceWid=wid; supersetSourceEid=eid;
@@ -2388,7 +2394,6 @@ function openSupersetModal(wid,eid){
     renderSupersetPicker(wid,eid);
     openModal('modal-superset');
 }
-
 function renderSupersetPicker(wid,eid){
     const w=getWorkout(wid); if(!w)return;
     const list=document.getElementById('superset-picker-list'); list.innerHTML='';
@@ -2405,18 +2410,13 @@ function renderSupersetPicker(wid,eid){
             <div><div style="font-weight:700;font-size:0.9rem;">${ex.name}</div>
             <div style="font-size:0.75rem;color:var(--text-secondary);">${TYPE_ICONS[ex.exerciseType]||'•'} ${exTypeLabel(ex.exerciseType)}</div></div>`;
         item.addEventListener('click',()=>{
-            if(supersetPendingGroup.includes(ex.id)){
-                supersetPendingGroup=supersetPendingGroup.filter(x=>x!==ex.id);
-            } else {
-                if(supersetPendingGroup.length>=3){showToast('Max 4 exercises per superset','error');return;}
-                supersetPendingGroup.push(ex.id);
-            }
+            if(supersetPendingGroup.includes(ex.id)) supersetPendingGroup=supersetPendingGroup.filter(x=>x!==ex.id);
+            else{ if(supersetPendingGroup.length>=3){showToast('Max 4 exercises per superset','error');return;} supersetPendingGroup.push(ex.id); }
             renderSupersetPicker(wid,eid);
         });
         list.appendChild(item);
     });
 }
-
 function saveSupersetSelection(){
     const w=getWorkout(supersetSourceWid); if(!w)return;
     const sourceEx=w.exercises.find(e=>e.id===supersetSourceEid); if(!sourceEx)return;
@@ -2461,7 +2461,6 @@ function buildRepsAtTopWeightData(sessions){
     }
     return points;
 }
-
 function renderRepsAtTopWeightChart(sessions){
     const allPoints=buildRepsAtTopWeightData(sessions);
     if(allPoints.length<1)return'';
@@ -2469,8 +2468,7 @@ function renderRepsAtTopWeightChart(sessions){
     const cappedWeights=uniqueWeights.slice(-10);
     const points=allPoints.filter(p=>cappedWeights.includes(p.weight));
     if(!points.length)return'';
-    const series=[];
-    let cur=null;
+    const series=[];let cur=null;
     for(const p of points){
         if(!cur||p.weight!==cur.weight){cur={weight:p.weight,points:[p]};series.push(cur);}
         else cur.points.push(p);
