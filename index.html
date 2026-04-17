@@ -1500,6 +1500,46 @@ function setupDragReorder(item,idx,getArr,onDrop,rerender){
 function setupReorderDrag(item,idx){setupDragReorder(item,idx,()=>{const w=getWorkout(currentWorkoutId);return w?.exercises;},()=>{},openReorderModal);}
 function setupSessionReorderDrag(item,idx){setupDragReorder(item,idx,()=>activeSession?.exercises,saveActiveSession,openSessionReorderModal);}
 
+// ── SESSION EXERCISE MENU ──
+function toggleExMenu(e,exIdx){
+    e.stopPropagation();
+    const menu=document.getElementById(`ex-menu-${exIdx}`);
+    const isOpen=menu.style.display!=='none';
+    closeAllExMenus();
+    if(!isOpen)menu.style.display='block';
+}
+function closeAllExMenus(){
+    document.querySelectorAll('.ex-menu-dropdown').forEach(m=>m.style.display='none');
+}
+document.addEventListener('click',()=>closeAllExMenus());
+
+function addSetToExercise(exIdx,type){
+    const ex=activeSession.exercises[exIdx]; if(!ex)return;
+    const setsOfType=ex.sets.filter(s=>s.type===type);
+    const lastOfType=setsOfType[setsOfType.length-1];
+    const newSet={type,weight:lastOfType?.weight||null,reps:type==='warmup'?10:(lastOfType?.reps||null),rir:'',note:'',logged:false};
+    if(type==='warmup'){
+        const lastWarmupIdx=[...ex.sets.keys()].reverse().find(i=>ex.sets[i].type==='warmup')??-1;
+        ex.sets.splice(lastWarmupIdx+1,0,newSet);
+    } else {
+        ex.sets.push(newSet);
+    }
+    saveActiveSession(); renderSessionExercises();
+    showToast((type==='warmup'?'Warm-up':'Working')+' set added','success');
+}
+function removeLastSet(exIdx,type){
+    const ex=activeSession.exercises[exIdx]; if(!ex)return;
+    const setsOfType=ex.sets.filter(s=>s.type===type);
+    if(!setsOfType.length){showToast('No '+type+' set to remove','error');return;}
+    if(type==='working'&&setsOfType.length<=1){showToast('Need at least 1 working set','error');return;}
+    const lastIdx=[...ex.sets.keys()].reverse().find(i=>ex.sets[i].type===type);
+    ex.sets.splice(lastIdx,1);
+    saveActiveSession(); renderSessionExercises();
+    showToast((type==='warmup'?'Warm-up':'Working')+' set removed','success');
+}
+
+
+
 function openReplaceExerciseModal(exIdx){
     replacingExIdx=exIdx;
     savingToLibraryOnly=false; editingExerciseId=null;
@@ -1885,7 +1925,7 @@ function buildSessionExCard(ex,exIdx){
                 <div class="session-ex-name">${ex.exerciseName}${ex.substituted?'<span class="badge-substituted">subbed</span>':''}</div>
                 <div class="session-ex-meta">${TYPE_ICONS[ex.exerciseType]||'•'} ${ex.sets.filter(s=>s.type==='warmup').length} ${t('warmupShort')} · ${ex.sets.filter(s=>s.type==='working').length} ${t('workingShort')}${prev1rm?` · Prev ~${prev1rm}kg 1RM`:''}</div>
             </div>
-            ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="showToast(activeSession.exercises[${exIdx}].notes,'')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
+            ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="openNoteModal(activeSession.exercises[${exIdx}].notes)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
             <button class="ex-menu-btn" onclick="toggleExMenu(event,${exIdx})">⋯</button>
             <div class="ex-menu-dropdown" id="ex-menu-${exIdx}" style="display:none;">
                 <div class="ex-menu-item" onclick="openSessionReorderModal();closeAllExMenus()">
