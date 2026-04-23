@@ -391,8 +391,6 @@
         .rtw-chart-wrap { background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; margin-bottom:16px; }
         .rtw-legend { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
         .rtw-series-label { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:0.68rem; font-weight:700; border:1px solid; white-space:nowrap; }
-    
-        .workout-card.drag-over { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-border); }
     </style>
 </head>
 <body>
@@ -434,7 +432,7 @@
             <div id="workout-reorder-btn-wrap" style="display:none;margin-top:8px;">
                 <button class="btn btn-secondary btn-full" onclick="openReorderWorkoutsModal()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                    Reorder Workouts
+                    <span data-i18n="reorderWorkouts">Reorder Workouts</span>
                 </button>
             </div>
         </div>
@@ -579,7 +577,7 @@
         </div>
         <div class="section-title" data-i18n="about">About</div>
         <div class="card">
-            <div class="text-sm text-secondary"><strong style="color:var(--text-primary);">Workout Tracker v5.7</strong><br>1RM: Epley formula.<br><span data-i18n="localData">All data stored locally on your device.</span></div>
+            <div class="text-sm text-secondary"><strong style="color:var(--text-primary);">Workout Tracker v5.8</strong><br>1RM: Epley formula.<br><span data-i18n="localData">All data stored locally on your device.</span></div>
         </div>
     </div>
 
@@ -609,8 +607,8 @@
 </div>
 
 <!-- ══ MODALS ══ -->
-<div class="modal-overlay" id="modal-superset"><div class="modal"><div class="modal-handle"></div><div class="modal-title">Add to Superset</div><div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">Select exercises to superset with <strong id="superset-source-name"></strong>. Up to 4 total. Untick all to remove superset.</div><div id="superset-picker-list" style="max-height:320px;overflow-y:auto;"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-superset')">Cancel</button><button class="btn btn-primary" onclick="saveSupersetSelection()">Save</button></div></div></div>
-<div class="modal-overlay" id="modal-exercise-note"><div class="modal"><div class="modal-handle"></div><div class="modal-title">Exercise Notes</div><div id="note-modal-text" style="font-size:0.95rem;line-height:1.6;color:var(--text-primary);white-space:pre-wrap;padding:4px 0 16px;"></div><div class="modal-actions"><button class="btn btn-secondary btn-full" onclick="closeModal('modal-exercise-note')">Close</button></div></div></div>
+<div class="modal-overlay" id="modal-superset"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="addToSuperset">Add to Superset</div><div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;" data-i18n-ss-desc="1">Select exercises to superset with <strong id="superset-source-name"></strong>. Up to 4 total. Untick all to remove superset.</div><div id="superset-picker-list" style="max-height:320px;overflow-y:auto;"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-superset')">Cancel</button><button class="btn btn-primary" onclick="saveSupersetSelection()">Save</button></div></div></div>
+<div class="modal-overlay" id="modal-exercise-note"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="exerciseNotesTitle">Exercise Notes</div><div id="note-modal-text" style="font-size:0.95rem;line-height:1.6;color:var(--text-primary);white-space:pre-wrap;padding:4px 0 16px;"></div><div class="modal-actions"><button class="btn btn-secondary btn-full" onclick="closeModal('modal-exercise-note')">Close</button></div></div></div>
 <div class="modal-overlay" id="modal-new-meso"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="newMesocycle">New Mesocycle</div><div style="background:var(--purple-dim);border:1px solid rgba(155,89,182,0.3);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:20px;font-size:0.85rem;color:var(--purple);" data-i18n="newMesoDesc">Starting a new mesocycle will archive your current workouts.</div><div class="form-group"><label class="form-label" data-i18n="mesocycleName">Mesocycle Name</label><input type="text" class="form-input" id="new-meso-name"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-new-meso')" data-i18n="cancel">Cancel</button><button class="btn btn-purple" onclick="createNewMesocycle()" data-i18n="createMeso">Create</button></div></div></div>
 
 <div class="modal-overlay" id="modal-edit-meso"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="editMesocycle">Edit Mesocycle</div><div class="form-group"><label class="form-label" data-i18n="mesocycleName">Name</label><input type="text" class="form-input" id="edit-meso-name"></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-edit-meso')" data-i18n="cancel">Cancel</button><button class="btn btn-primary" onclick="saveEditMeso()" data-i18n="save">Save</button></div></div></div>
@@ -645,6 +643,7 @@
                     <option value="plate_machine">🔧 Plate-Loaded Machine</option>
                     <option value="bodyweight">🤸 Bodyweight</option>
                     <option value="bodyweight_weighted">⚖️ Bodyweight (Weighted)</option>
+                    <option value="bodyweight_assisted">🦾 Bodyweight (Assisted)</option>
                     <option value="cable">🔄 Cable</option>
                     <option value="other">• Other</option>
                 </select>
@@ -683,7 +682,7 @@
 <div class="modal-overlay" id="modal-exercise-detail"><div class="modal"><div class="modal-handle"></div><div class="flex-between" style="margin-bottom:20px;"><div class="modal-title" style="margin-bottom:0;" id="exercise-detail-name">Exercise</div><button class="btn btn-secondary btn-sm" onclick="openWorkoutShareModal()" style="display:flex;align-items:center;gap:4px;">Share</button></div><div id="exercise-detail-content"></div><div class="modal-actions"><button class="btn btn-secondary btn-full" onclick="closeModal('modal-exercise-detail')" data-i18n="close">Close</button></div></div></div>
 
 <!-- Library Detail -->
-<div class="modal-overlay" id="modal-workout-share"><div class="modal"><div class="modal-handle"></div><div class="modal-title">Share Workout</div><pre id="workout-share-text" style="font-family:inherit;font-size:0.82rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;max-height:50vh;overflow-y:auto;margin-bottom:4px;"></pre><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-workout-share')">Close</button><button class="btn btn-primary" onclick="copyWorkoutText()">Copy Text</button></div></div></div>
+<div class="modal-overlay" id="modal-workout-share"><div class="modal"><div class="modal-handle"></div><div class="modal-title" data-i18n="shareWorkout">Share Workout</div><pre id="workout-share-text" style="font-family:inherit;font-size:0.82rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;max-height:50vh;overflow-y:auto;margin-bottom:4px;"></pre><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modal-workout-share')">Close</button><button class="btn btn-primary" onclick="copyWorkoutText()" data-i18n="copyText">Copy Text</button></div></div></div>
 <div class="modal-overlay" id="modal-library-detail"><div class="modal"><div class="modal-handle"></div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;"><div class="modal-title" style="margin-bottom:0;" id="lib-detail-name">Exercise</div><div style="display:flex;gap:8px;"><button class="btn-icon" title="Edit" onclick="editLibraryExerciseFromDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-icon btn-danger" title="Delete" onclick="deleteLibraryExerciseFromDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></div></div><div id="lib-detail-content"></div><div class="modal-actions"><button class="btn btn-secondary btn-full" onclick="closeModal('modal-library-detail')" data-i18n="close">Close</button></div></div></div>
 
 <!-- Exercise Calculator -->
@@ -769,11 +768,11 @@
 <div class="modal-overlay" id="modal-reorder-workouts">
     <div class="modal">
         <div class="modal-handle"></div>
-        <div class="modal-title">Reorder Workouts</div>
+        <div class="modal-title" data-i18n="reorderWorkouts">Reorder Workouts</div>
         <div id="workout-reorder-list"></div>
         <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal('modal-reorder-workouts')">Cancel</button>
-            <button class="btn btn-primary" onclick="saveWorkoutReorder()">Save</button>
+            <button class="btn btn-secondary" onclick="closeModal('modal-reorder-workouts')" data-i18n="cancel">Cancel</button>
+            <button class="btn btn-primary" onclick="saveWorkoutReorder()" data-i18n="save">Save</button>
         </div>
     </div>
 </div>
@@ -813,7 +812,7 @@
 // ── CONSTANTS ──
 const MUSCLE_GROUPS    = ['Chest','Lats','Front Delts','Side Delts','Rear Delts','Biceps','Triceps','Quads','Hamstrings','Glutes','Calves','Adductors','Core','Forearms','Traps'];
 const MUSCLE_GROUPS_CS = ['Prsa','Latissimus','Přední deltoid','Boční deltoid','Zadní deltoid','Biceps','Triceps','Kvadriceps','Hamstringy','Hýžďové svaly','Lýtka','Adduktory','Střed těla','Předloktí','Trapézy'];
-const TYPE_ICONS = {barbell:'🏋️',dumbbell:'💪',pin_machine:'🔩',plate_machine:'🔧',bodyweight:'🤸',bodyweight_weighted:'⚖️',cable:'🔄',other:'•'};
+const TYPE_ICONS = {barbell:'🏋️',dumbbell:'💪',pin_machine:'🔩',plate_machine:'🔧',bodyweight:'🤸',bodyweight_weighted:'⚖️',bodyweight_assisted:'🦾',cable:'🔄',other:'•'};
 const FUN_COMPARISONS = [
     {emoji:'🚌',kg:11500,en:'a double-decker bus',cs:'dvoupatrový autobus'},
     {emoji:'🐘',kg:5000,en:'an African elephant',cs:'africký slon'},
@@ -871,6 +870,29 @@ const TRANSLATIONS = {
         exerciseType_cable:'Cable', exerciseType_other:'Other',
         muscleVolumeTitle:'Volume by Muscle Group',
         reorderSession:'Reorder Exercises', replaceExercise:'Replace Exercise',
+        reorderWorkouts:'Reorder Workouts',
+        exerciseType_bodyweight_assisted:'Bodyweight (Assisted)',
+        repsAtTopWeight:'Reps at Top Weight',
+        workingSetTargets:'Working Set Targets',
+        weightKgHeader:'Weight (kg)', repsHeader:'Reps', rirHeader:'RIR',
+        exerciseNotesTitle:'Exercise Notes',
+        prev1rm:'Prev 1RM',
+        shareWorkout:'Share Workout',
+        copyText:'Copy Text',
+        copied:'Copied!',
+        addToSuperset:'Add to Superset',
+        editSuperset:'Edit Superset',
+        supersetOf:'Superset',
+        noOtherExercises:'No other exercises in this workout.',
+        max4Superset:'Max 4 exercises per superset',
+        supersetSaved:'Superset saved! 💪',
+        removedFromSuperset:'Removed from superset',
+        workoutOrderSaved:'Workout order saved! 💪',
+        setLogged:'✅ Set logged! Rest 3 min.',
+        setLoggedSS:'✅ Set logged! Superset rest 90s.',
+        warmupDone:'✅ Warm-up done! Rest 90s.',
+        warmupDoneSS:'✅ Warm-up done! Superset rest 30s.',
+        assistedNote:'Lower assist weight = better progress',
     },
     cs:{
         myWorkouts:'Moje tréninky', newMeso:'Nový blok', workout:'Trénink',
@@ -915,6 +937,29 @@ const TRANSLATIONS = {
         exerciseType_cable:'Kladka', exerciseType_other:'Ostatní',
         muscleVolumeTitle:'Objem podle svalových skupin',
         reorderSession:'Změnit pořadí cviků', replaceExercise:'Nahradit cvik',
+        reorderWorkouts:'Změnit pořadí tréninků',
+        exerciseType_bodyweight_assisted:'Vlastní váha (asistovaně)',
+        repsAtTopWeight:'Opakování s nejvyšší váhou',
+        workingSetTargets:'Cíle pracovních sérií',
+        weightKgHeader:'Váha (kg)', repsHeader:'Opak.', rirHeader:'RIR',
+        exerciseNotesTitle:'Poznámky ke cviku',
+        prev1rm:'Předchozí 1RM',
+        shareWorkout:'Sdílet trénink',
+        copyText:'Kopírovat',
+        copied:'Zkopírováno!',
+        addToSuperset:'Přidat do supersetu',
+        editSuperset:'Upravit superset',
+        supersetOf:'Superset',
+        noOtherExercises:'Žádné další cviky v tréninku.',
+        max4Superset:'Max 4 cviky v supersetu',
+        supersetSaved:'Superset uložen! 💪',
+        removedFromSuperset:'Odstraněno ze supersetu',
+        workoutOrderSaved:'Pořadí tréninků uloženo! 💪',
+        setLogged:'✅ Série zapsána! Odpočinek 3 min.',
+        setLoggedSS:'✅ Série zapsána! Superset odpočinek 90s.',
+        warmupDone:'✅ Rozcvičení hotovo! Odpočinek 90s.',
+        warmupDoneSS:'✅ Rozcvičení hotovo! Superset odpočinek 30s.',
+        assistedNote:'Nižší asistovaná váha = lepší výkon',
     }
 };
 
@@ -1320,7 +1365,7 @@ function buildExerciseRow(w,ex,idx){
     row.className='exercise-row fade-in';row.dataset.exIdx=idx;
     const muscles=renderMuscleBadges(ex.primaryMuscle,ex.secondaryMuscles,ex.primaryMuscles);
     const ssStyle=ex.supersetGroupId?'border-color:#f39c12;color:#f39c12;background:rgba(243,156,18,0.12);':'';
-    const ssTitle=ex.supersetGroupId?'Edit Superset':'Add to Superset';
+    const ssTitle=ex.supersetGroupId?t('editSuperset'):t('addToSuperset');
     row.innerHTML=`
         <div class="exercise-row-header">
             <div class="exercise-row-main">
@@ -1393,9 +1438,9 @@ function renderPerSetTargets(ex, wid){
     const container=document.getElementById(`per-set-${ex.id}`);
     if(!container||!ex.workingSets||ex.workingSets<1){if(container)container.innerHTML='';return;}
     const sets=ex.perSetTargets||[];
-    let html=`<div class="per-set-targets-title">Working Set Targets</div>
+    let html=`<div class="per-set-targets-title">${t('workingSetTargets')}${ex.exerciseType==='bodyweight_assisted'?` <span style="font-size:0.7rem;color:#3498db;font-weight:600;">↓ ${t('assistedNote')}</span>`:''}</div>
         <div class="per-set-target-header">
-            <span></span><span>Weight (kg)</span><span>Reps</span><span>RIR</span>
+            <span></span><span>${t('weightKgHeader')}</span><span>${t('repsHeader')}</span><span>${t('rirHeader')}</span>
         </div>`;
     for(let i=0;i<ex.workingSets;i++){
         const s=sets[i]||{};
@@ -1472,11 +1517,40 @@ function handlePerSetRirKey(e,wid,eid,idx){
 
 // ── REORDER MODAL ──
 
+// ── SESSION REORDER ──
+function openSessionReorderModal(){
+    if(!activeSession)return;
+    const list=document.getElementById('reorder-list'); list.innerHTML='';
+    activeSession.exercises.forEach((ex,idx)=>{
+        const item=document.createElement('div'); item.className='reorder-item'; item.dataset.idx=idx;
+        item.setAttribute('draggable','true');
+        item.innerHTML=`<div class="reorder-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+            <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${ex.exerciseName}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);">${TYPE_ICONS[ex.exerciseType]||'•'}</div></div>`;
+        setupSessionReorderDrag(item,idx);
+        list.appendChild(item);
+    });
+    document.getElementById('modal-reorder').dataset.context='session';
+    openModal('modal-reorder');
+}
+let sessionReorderDragSrc=null;
+function saveReorder(){
+    const ctx=document.getElementById('modal-reorder').dataset.context;
+    if(ctx==='session'){
+        saveActiveSession(); closeModal('modal-reorder'); renderSessionExercises();
+        showToast(t('save')+'!','success');
+    } else {
+        saveDB(); closeModal('modal-reorder'); renderTemplate(currentWorkoutId);
+        showToast(t('save')+'!','success');
+    }
+    document.getElementById('modal-reorder').dataset.context='';
+}
+
 // ── WORKOUT REORDER ──
 let _workoutOrder=[];
 function openReorderWorkoutsModal(){
     const am=getActiveMeso();
-    const workouts=am ? db.workouts.filter(w=>w.mesoId===am.id) : [...db.workouts];
+    const workouts=am?db.workouts.filter(w=>w.mesoId===am.id):[...db.workouts];
     _workoutOrder=workouts.map(w=>w.id);
     renderWorkoutReorderList();
     openModal('modal-reorder-workouts');
@@ -1490,7 +1564,7 @@ function renderWorkoutReorderList(){
         item.className='reorder-item'; item.dataset.idx=idx; item.setAttribute('draggable','true');
         item.innerHTML=`<div class="reorder-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div>
             <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${w.name}</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);">${w.exercises.length} exercises</div></div>`;
+            <div style="font-size:0.75rem;color:var(--text-dim);">${w.exercises.length} ${t('exercises')}</div></div>`;
         let startY,clone,origRect;
         item.addEventListener('dragstart',e=>{window._wReorderSrc=idx;item.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
         item.addEventListener('dragend',()=>{item.classList.remove('dragging');list.querySelectorAll('.reorder-item').forEach(i=>i.classList.remove('drag-over'));});
@@ -1540,7 +1614,7 @@ function saveWorkoutReorder(){
         const missing=db.workouts.filter(w=>!_workoutOrder.includes(w.id));
         db.workouts=[...reordered,...missing];
     }
-    saveDB();closeModal('modal-reorder-workouts');renderDashboard();showToast('Workout order saved! 💪','success');
+    saveDB();closeModal('modal-reorder-workouts');renderDashboard();showToast(t('workoutOrderSaved'),'success');
 }
 
 function openReorderModal(){
@@ -1592,34 +1666,6 @@ function setupDragReorder(item,idx,getArr,onDrop,rerender){
 }
 function setupReorderDrag(item,idx){setupDragReorder(item,idx,()=>{const w=getWorkout(currentWorkoutId);return w?.exercises;},()=>{},openReorderModal);}
 function setupSessionReorderDrag(item,idx){setupDragReorder(item,idx,()=>activeSession?.exercises,saveActiveSession,openSessionReorderModal);}
-
-function openSessionReorderModal(){
-    if(!activeSession)return;
-    const list=document.getElementById('reorder-list'); list.innerHTML='';
-    activeSession.exercises.forEach((ex,idx)=>{
-        const item=document.createElement('div'); item.className='reorder-item'; item.dataset.idx=idx;
-        item.setAttribute('draggable','true');
-        item.innerHTML=`<div class="reorder-drag-handle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
-            <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${ex.exerciseName}</div>
-            <div style="font-size:0.75rem;color:var(--text-dim);">${TYPE_ICONS[ex.exerciseType]||'•'}</div></div>`;
-        setupSessionReorderDrag(item,idx);
-        list.appendChild(item);
-    });
-    document.getElementById('modal-reorder').dataset.context='session';
-    openModal('modal-reorder');
-}
-let sessionReorderDragSrc=null;
-function saveReorder(){
-    const ctx=document.getElementById('modal-reorder').dataset.context;
-    if(ctx==='session'){
-        saveActiveSession(); closeModal('modal-reorder'); renderSessionExercises();
-        showToast(t('save')+'!','success');
-    } else {
-        saveDB(); closeModal('modal-reorder'); renderTemplate(currentWorkoutId);
-        showToast(t('save')+'!','success');
-    }
-    document.getElementById('modal-reorder').dataset.context='';
-}
 
 // ── SESSION EXERCISE MENU ──
 function toggleExMenu(e,exIdx){
@@ -2044,7 +2090,7 @@ function buildSessionExCard(ex,exIdx){
         <div class="session-ex-header">
             <div style="flex:1;min-width:0;">
                 <div class="session-ex-name">${ex.exerciseName}${ex.substituted?'<span class="badge-substituted">subbed</span>':''}</div>
-                <div class="session-ex-meta">${TYPE_ICONS[ex.exerciseType]||'•'} ${ex.sets.filter(s=>s.type==='warmup').length} ${t('warmupShort')} · ${ex.sets.filter(s=>s.type==='working').length} ${t('workingShort')}${prev1rm?` · Prev ~${prev1rm}kg 1RM`:''}</div>
+                <div class="session-ex-meta">${TYPE_ICONS[ex.exerciseType]||'•'} ${ex.sets.filter(s=>s.type==='warmup').length} ${t('warmupShort')} · ${ex.sets.filter(s=>s.type==='working').length} ${t('workingShort')}${prev1rm?` · ${t('prev1rm')} ~${prev1rm}kg`:''}</div>
             </div>
             ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="openNoteModal(activeSession.exercises[${exIdx}].notes)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
             <button class="ex-menu-btn" onclick="toggleExMenu(event,${exIdx})">⋯</button>
@@ -2186,7 +2232,7 @@ function toggleLogSet(exIdx,setIdx){
     const set=activeSession.exercises[exIdx].sets[setIdx];
     if(!set.logged&&(set.weight===null||set.reps===null)){showToast(currentLang==='cs'?'Zadej váhu a opakování.':'Enter weight and reps first.','error');return;}
     set.logged=!set.logged; saveActiveSession(); renderSetInputRows(exIdx); updateSessionProgress();
-    if(set.logged){const inSS=!!(activeSession.exercises[exIdx]?.supersetGroupId);const secs=set.type==='working'?(inSS?90:180):(inSS?30:90);startRestTimer(secs);showToast(set.type==='working'?(inSS?'✅ Set logged! Superset rest 90s.':'✅ Set logged! Rest 3 min.'):(inSS?'✅ Warm-up done! Superset rest 30s.':'✅ Warm-up done! Rest 90s.'),'success');}
+    if(set.logged){const inSS=!!(activeSession.exercises[exIdx]?.supersetGroupId);const secs=set.type==='working'?(inSS?90:180):(inSS?30:90);startRestTimer(secs);showToast(set.type==='working'?(inSS?t('setLoggedSS'):t('setLogged')):(inSS?t('warmupDoneSS'):t('warmupDone')),'success');}
     else showToast('Set unlogged.','');
 }
 function updateSessionProgress(){
@@ -2314,7 +2360,7 @@ function openSessionDetail(sessionId){
     const tw=sess.exercises.reduce((a,e)=>a+(e.sets||[]).reduce((b,s)=>b+((s.weight||0)*(s.reps||0)),0),0);
     let html=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">${meso?`<span class="badge badge-purple">${meso.name}</span>`:''}<span class="badge badge-accent">${formatDate(sess.date)}</span>${sess.duration?`<span class="badge badge-blue">${formatDuration(sess.duration)}</span>`:''}<span class="badge badge-green">${tw.toLocaleString()}kg total</span></div>`;
     sess.exercises.forEach(ex=>{
-        const sets=ex.sets||[];const ws=sets.filter(s=>s.type==='working'&&s.weight!=null&&s.reps);const b=ws.length?Math.max(...ws.map(s=>calc1RM(s.weight,s.reps))):null;
+        const sets=ex.sets||[];const ws=sets.filter(s=>s.type==='working'&&s.weight!=null&&s.reps);const b=ws.length?Math.max(...ws.map(s=>calcEffective1RM(s.weight,s.reps,ex.exerciseType||ex.type))):null;
         const ssB=ex.supersetGroupId?'<span style="display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:20px;font-size:0.65rem;font-weight:700;background:rgba(243,156,18,0.12);border:1px solid rgba(243,156,18,0.35);color:#f39c12;margin-left:6px;">SS</span>':'';
         html+=`<div style="margin-bottom:16px;${ex.supersetGroupId?'border-left:3px solid #f39c12;padding-left:10px;':''}"><div class="flex-between" style="margin-bottom:8px;"><div style="font-weight:700;">${ex.exerciseName}${ssB}</div>${b?`<span style="font-size:0.78rem;color:var(--accent);font-weight:700;">~${b.toFixed(1)}kg 1RM</span>`:''}</div>${renderSetRows(sets)}</div>`;
     });
@@ -2350,8 +2396,8 @@ function openWorkoutShareModal(){
 }
 function copyWorkoutText(){
     const text=document.getElementById('workout-share-text').textContent;
-    if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>showToast('Copied!','success')).catch(()=>{});
-    else{const ta=Object.assign(document.createElement('textarea'),{value:text});ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Copied!','success');}
+    if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>showToast(t('copied'),'success')).catch(()=>{});
+    else{const ta=Object.assign(document.createElement('textarea'),{value:text});ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast(t('copied'),'success');}
 }
 // ── SUPERSET ──
 const SS_COLORS=['#f39c12','#3498db','#2ecc71','#9b59b6','#e74c3c','#1abc9c'];
@@ -2372,7 +2418,7 @@ function renderSupersetPicker(wid,eid){
     const w=getWorkout(wid);if(!w)return;
     const list=document.getElementById('superset-picker-list');list.innerHTML='';
     const others=w.exercises.filter(e=>e.id!==eid);
-    if(!others.length){list.innerHTML='<div style="color:var(--text-dim);font-size:0.88rem;padding:12px;">No other exercises in this workout.</div>';return;}
+    if(!others.length){list.innerHTML='<div style="color:var(--text-dim);font-size:0.88rem;padding:12px;">'+t('noOtherExercises')+'</div>';return;}
     others.forEach(ex=>{
         const checked=supersetPendingGroup.includes(ex.id);
         const item=document.createElement('div');
@@ -2382,7 +2428,7 @@ function renderSupersetPicker(wid,eid){
             +'<div class="txt-dim-sm">'+(TYPE_ICONS[ex.exerciseType]||'•')+' '+exTypeLabel(ex.exerciseType)+'</div></div>';
         item.addEventListener('click',()=>{
             if(supersetPendingGroup.includes(ex.id))supersetPendingGroup=supersetPendingGroup.filter(x=>x!==ex.id);
-            else{if(supersetPendingGroup.length>=3){showToast('Max 4 exercises per superset','error');return;}supersetPendingGroup.push(ex.id);}
+            else{if(supersetPendingGroup.length>=3){showToast(t('max4Superset'),'error');return;}supersetPendingGroup.push(ex.id);}
             renderSupersetPicker(wid,eid);
         });
         list.appendChild(item);
@@ -2394,13 +2440,13 @@ function saveSupersetSelection(){
     const oldGid=src.supersetGroupId||null;
     if(!supersetPendingGroup.length){
         if(oldGid){delete src.supersetGroupId;const rem=w.exercises.filter(e=>e.supersetGroupId===oldGid);if(rem.length<=1)rem.forEach(e=>delete e.supersetGroupId);}
-        saveDB();closeModal('modal-superset');renderTemplate(supersetSourceWid);showToast('Removed from superset','success');return;
+        saveDB();closeModal('modal-superset');renderTemplate(supersetSourceWid);showToast(t('removedFromSuperset'),'success');return;
     }
     const all=[supersetSourceEid,...supersetPendingGroup],gid=oldGid||uid();
     if(oldGid)w.exercises.forEach(e=>{if(e.supersetGroupId===oldGid)delete e.supersetGroupId;});
     all.forEach(id=>{const e=w.exercises.find(x=>x.id===id);if(e?.supersetGroupId&&e.supersetGroupId!==gid){const og=e.supersetGroupId;w.exercises.forEach(x=>{if(x.supersetGroupId===og)delete x.supersetGroupId;})}});
     all.forEach(id=>{const e=w.exercises.find(x=>x.id===id);if(e)e.supersetGroupId=gid;});
-    saveDB();closeModal('modal-superset');renderTemplate(supersetSourceWid);showToast('Superset saved! 💪','success');
+    saveDB();closeModal('modal-superset');renderTemplate(supersetSourceWid);showToast(t('supersetSaved'),'success');
 }
 function deleteSession(id){ openConfirm(currentLang==='cs'?'Smazat trénink?':'Delete Session?','',()=>{db.sessions=db.sessions.filter(s=>s.id!==id);saveDB();renderHistory();showToast(currentLang==='cs'?'Smazáno.':'Deleted.','success');}); }
 
@@ -2445,7 +2491,7 @@ function renderRepsAtTopWeightChart(sessions){
     const dropped=uniq.length-capped.length;
     const legend=shown.map(w=>'<span class="rtw-series-label" style="color:'+col(w)+';border-color:'+col(w)+';background:'+col(w)+'22;">'+w+'kg</span>').join('');
     return '<div class="rtw-chart-wrap">'
-        +'<div style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">Reps at Top Weight</div>'
+        +'<div style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">'+t('repsAtTopWeight')+'</div>'
         +'<div class="rtw-legend">'+legend+(dropped?'<span class="txt-dim-sm" style="align-self:center;">+'+dropped+' earlier</span>':'')+'</div>'
         +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;overflow:visible;">'
         +'<line x1="'+PAD+'" y1="'+PAD+'" x2="'+PAD+'" y2="'+(H-PAD)+'" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>'
@@ -2665,6 +2711,18 @@ function confirmReset(){ openConfirm(t('resetData'),t('resetDesc'),()=>{db=getDe
 
 // ── HELPERS ──
 function calc1RM(weight,reps){ return reps===1?weight:weight*(1+reps/30); }
+function calcEffective1RM(weight,reps,type){
+    // For assisted bodyweight: lower assist weight = harder = higher effective 1RM
+    // We invert: treat it as if the weight subtracted from bodyweight
+    // Practically: effective1RM = (1/weight) * 1000 * reps factor, but simpler:
+    // Use 100 as reference bodyweight proxy - score = (100 - weight) * (1 + reps/30)
+    // Higher score = less assistance = stronger
+    if(type==='bodyweight_assisted'&&weight>0){
+        const effective=Math.max(1, 200-weight); // invert: 200kg assist = weakest, 0kg = strongest proxy
+        return reps===1?effective:effective*(1+reps/30);
+    }
+    return calc1RM(weight,reps);
+}
 function formatDate(s){ return new Date(s).toLocaleDateString(currentLang==='cs'?'cs-CZ':'en-GB',{day:'numeric',month:'short',year:'numeric'}); }
 function formatDuration(s){ const m=Math.floor(s/60),sec=s%60; return `${m}:${sec.toString().padStart(2,'0')}`; }
 
