@@ -237,7 +237,8 @@
         .session-notes-row { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px; margin-bottom:16px; }
         .session-ex-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:16px; overflow:hidden; }
         .session-ex-header { padding:14px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.02); position:relative; }
-        .session-ex-name { font-size:0.95rem; font-weight:800; flex:1; }
+        .session-ex-name { font-size:0.95rem; font-weight:800; flex:1; cursor:pointer; }
+        .session-ex-name:hover { color:var(--blue); }
         .session-ex-meta { font-size:0.75rem; color:var(--text-secondary); margin-top:2px; }
 
         /* Set rows */
@@ -367,6 +368,7 @@
         .ex-menu-btn:hover { background:var(--bg-card-hover); color:var(--text-primary); }
         .ex-menu-dropdown { position:absolute; top:100%; right:0; background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-md); box-shadow:var(--shadow); z-index:200; min-width:180px; overflow:hidden; }
         .ex-menu-item { display:flex; align-items:center; gap:10px; padding:12px 16px; font-size:0.88rem; font-weight:600; color:var(--text-primary); cursor:pointer; transition:background 0.15s; }
+        .ex-menu-item-danger { color:var(--accent) !important; }
         .ex-menu-item:hover { background:var(--bg-card-hover); }
         .ex-menu-item svg { width:16px; height:16px; color:var(--text-secondary); flex-shrink:0; }
         
@@ -577,7 +579,7 @@
         </div>
         <div class="section-title" data-i18n="about">About</div>
         <div class="card">
-            <div class="text-sm text-secondary"><strong style="color:var(--text-primary);">Workout Tracker v5.8</strong><br>1RM: Epley formula.<br><span data-i18n="localData">All data stored locally on your device.</span></div>
+            <div class="text-sm text-secondary"><strong style="color:var(--text-primary);">Workout Tracker v5.9</strong><br>1RM: Epley formula.<br><span data-i18n="localData">All data stored locally on your device.</span></div>
         </div>
     </div>
 
@@ -1144,6 +1146,8 @@ function closeModal(id){
         if(el.dataset.context==='replace'){
             el.dataset.context='';
             replacingExIdx=null;
+        } else if(el.dataset.context==='session-add'){
+            el.dataset.context='';
         }
     }
 }
@@ -1670,15 +1674,99 @@ function setupSessionReorderDrag(item,idx){setupDragReorder(item,idx,()=>activeS
 // ── SESSION EXERCISE MENU ──
 function toggleExMenu(e,exIdx){
     e.stopPropagation();
-    const menu=document.getElementById(`ex-menu-${exIdx}`);
-    const isOpen=menu.style.display!=='none';
+    const menu=document.getElementById('session-ex-menu');
+    if(!menu) return;
+    const alreadyOpenFor=menu.dataset.openFor;
     closeAllExMenus();
-    if(!isOpen)menu.style.display='block';
+    if(alreadyOpenFor==String(exIdx)) return;
+    menu.dataset.openFor=String(exIdx);
+    menu.innerHTML=
+        '<div class="ex-menu-item" onclick="openSessionReorderModal();closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'+
+        t('reorderSession')+'</div>'+
+        '<div class="ex-menu-item" onclick="openReplaceExerciseModal('+exIdx+');closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>'+
+        t('replaceExercise')+'</div>'+
+        '<div style="height:1px;background:var(--border);margin:4px 0;"></div>'+
+        '<div class="ex-menu-item" onclick="addSetToExercise('+exIdx+',\'warmup\');closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>+ '+
+        t('warmupShort')+' Set</div>'+
+        '<div class="ex-menu-item" onclick="addSetToExercise('+exIdx+',\'working\');closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>+ '+
+        t('workingShort')+' Set</div>'+
+        '<div class="ex-menu-item" onclick="removeLastSet('+exIdx+',\'warmup\');closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>− '+
+        t('warmupShort')+' Set</div>'+
+        '<div class="ex-menu-item" onclick="removeLastSet('+exIdx+',\'working\');closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>− '+
+        t('workingShort')+' Set</div>'+
+        '<div style="height:1px;background:var(--border);margin:4px 0;"></div>'+
+        '<div class="ex-menu-item" onclick="openAddExerciseToSession();closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'+
+        (currentLang==='cs'?'Přidat cvik':'Add Exercise')+'</div>'+
+        '<div class="ex-menu-item ex-menu-item-danger" onclick="removeExerciseFromSession('+exIdx+');closeAllExMenus()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>'+
+        (currentLang==='cs'?'Odebrat cvik':'Remove Exercise')+'</div>';
+    var btn=e.currentTarget;
+    var rect=btn.getBoundingClientRect();
+    var menuW=210;
+    var left=rect.right-menuW;
+    if(left<4) left=4;
+    if(left+menuW>window.innerWidth-4) left=window.innerWidth-menuW-4;
+    menu.style.left=left+'px';
+    menu.style.top=(rect.bottom+4)+'px';
+    menu.style.display='block';
 }
 function closeAllExMenus(){
-    document.querySelectorAll('.ex-menu-dropdown').forEach(m=>m.style.display='none');
+    var menu=document.getElementById('session-ex-menu');
+    if(menu){ menu.style.display='none'; menu.dataset.openFor=''; }
 }
 document.addEventListener('click',()=>closeAllExMenus());
+
+
+// ── SESSION: VIEW EXERCISE HISTORY FROM LIVE WORKOUT ──
+function openSessionExerciseDetail(exIdx){
+    if(!activeSession)return;
+    var ex=activeSession.exercises[exIdx]; if(!ex)return;
+    detailCurrentTab='meso';
+    detailExerciseName=ex.exerciseName;
+    detailExerciseId=ex.exerciseId;
+    detailWorkoutId=activeSession.workoutId;
+    document.getElementById('exercise-detail-name').textContent=ex.exerciseName;
+    renderExerciseDetailContent();
+    openModal('modal-exercise-detail');
+}
+
+// ── SESSION: ADD EXERCISE TO LIVE WORKOUT ──
+function openAddExerciseToSession(){
+    savingToLibraryOnly=false; editingExerciseId=null;
+    resetExerciseForm();
+    document.getElementById('modal-exercise-title').textContent=currentLang==='cs'?'Přidat cvik':'Add Exercise';
+    document.getElementById('exercise-source-selector').style.display='block';
+    document.getElementById('tab-new-exercise').classList.add('active');
+    document.getElementById('tab-library-exercise').classList.remove('active');
+    document.getElementById('modal-exercise').dataset.context='session-add';
+    document.getElementById('workout-only-fields').style.display='block';
+    buildMuscleGrids();
+    openModal('modal-exercise');
+}
+
+// ── SESSION: REMOVE EXERCISE FROM LIVE WORKOUT ──
+function removeExerciseFromSession(exIdx){
+    if(!activeSession)return;
+    var ex=activeSession.exercises[exIdx]; if(!ex)return;
+    openConfirm(
+        currentLang==='cs'?'Odebrat cvik?':'Remove Exercise?',
+        '"'+ex.exerciseName+'"',
+        function(){
+            activeSession.exercises.splice(exIdx,1);
+            saveActiveSession();
+            renderSessionExercises();
+            updateSessionProgress();
+            showToast(currentLang==='cs'?'Cvik odebrán.':'Exercise removed.','success');
+        }
+    );
+}
 
 function addSetToExercise(exIdx,type){
     const ex=activeSession.exercises[exIdx]; if(!ex)return;
@@ -2089,38 +2177,11 @@ function buildSessionExCard(ex,exIdx){
     card.innerHTML=`
         <div class="session-ex-header">
             <div style="flex:1;min-width:0;">
-                <div class="session-ex-name">${ex.exerciseName}${ex.substituted?'<span class="badge-substituted">subbed</span>':''}</div>
+                <div class="session-ex-name" onclick="openSessionExerciseDetail(${exIdx})" title="View history">${ex.exerciseName}${ex.substituted?'<span class="badge-substituted">subbed</span>':''}</div>
                 <div class="session-ex-meta">${TYPE_ICONS[ex.exerciseType]||'•'} ${ex.sets.filter(s=>s.type==='warmup').length} ${t('warmupShort')} · ${ex.sets.filter(s=>s.type==='working').length} ${t('workingShort')}${prev1rm?` · ${t('prev1rm')} ~${prev1rm}kg`:''}</div>
             </div>
             ${ex.notes?`<button class="btn-icon" style="flex-shrink:0;" onclick="openNoteModal(activeSession.exercises[${exIdx}].notes)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>`:''}
             <button class="ex-menu-btn" onclick="toggleExMenu(event,${exIdx})">⋯</button>
-            <div class="ex-menu-dropdown" id="ex-menu-${exIdx}" style="display:none;">
-                <div class="ex-menu-item" onclick="openSessionReorderModal();closeAllExMenus()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                    ${t('reorderSession')}
-                </div>
-                <div class="ex-menu-item" onclick="openReplaceExerciseModal(${exIdx});closeAllExMenus()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-                    ${t('replaceExercise')}
-                </div>
-                <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-                <div class="ex-menu-item" onclick="addSetToExercise(${exIdx},'warmup');closeAllExMenus()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    + ${t('warmupShort')} Set
-                </div>
-                <div class="ex-menu-item" onclick="addSetToExercise(${exIdx},'working');closeAllExMenus()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    + ${t('workingShort')} Set
-                </div>
-                <div class="ex-menu-item" onclick="removeLastSet(${exIdx},'warmup');closeAllExMenus()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    − ${t('warmupShort')} Set
-                </div>
-                <div class="ex-menu-item" onclick="removeLastSet(${exIdx},'working');closeAllExMenus()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    − ${t('workingShort')} Set
-                </div>
-            </div>
         </div>
         <div class="set-rows" id="set-rows-${exIdx}"></div>`;
     return card;
@@ -2330,7 +2391,8 @@ let detailCurrentTab='meso', detailExerciseName='', detailExerciseId='', detailW
 function openExerciseDetail(wid,eid){ const ex=getExercise(wid,eid);if(!ex)return; detailCurrentTab='meso';detailExerciseName=ex.name;detailExerciseId=eid;detailWorkoutId=wid; document.getElementById('exercise-detail-name').textContent=ex.name; renderExerciseDetailContent();openModal('modal-exercise-detail'); }
 function switchDetailTab(tab){ detailCurrentTab=tab; renderExerciseDetailContent(); }
 function renderExerciseDetailContent(){
-    const ex=getExercise(detailWorkoutId,detailExerciseId); if(!ex)return;
+    let ex=getExercise(detailWorkoutId,detailExerciseId);
+    if(!ex){ const lib=getLibraryEntry(detailExerciseName); ex=lib?{notes:lib.notes||''}:{notes:''}; }
     const am=getActiveMeso();
     // Fix: "This Meso" now uses name+meso filter instead of just exerciseId
     let sessions;
@@ -2635,6 +2697,37 @@ function saveExercise(){
         showToast(currentLang==='cs'?'Cvik nahrazen!':'Exercise replaced!','success');
         return;
     }
+    if(exCtx==='session-add'&&activeSession){
+        var pcts2=[0.50,0.75,0.85,0.90];
+        var warmupCount2=data.warmupSets||0;
+        var workingCount2=data.workingSets||1;
+        var lastMatches2=getSessionsForExerciseName(data.name);
+        var lastData2=lastMatches2.length?lastMatches2[0].data:null;
+        var targetW2=data.targetWeight||null;
+        var warmupSets2=[];
+        for(var wi=0;wi<warmupCount2;wi++){
+            var prevW2=lastData2&&lastData2.sets?lastData2.sets.filter(function(s){return s.type==='warmup';})[wi]:null;
+            var pf2=null;
+            if(prevW2&&prevW2.weight!=null) pf2=prevW2.weight;
+            else if(targetW2!=null&&pcts2[wi]!==undefined) pf2=Math.round(targetW2*pcts2[wi]*2)/2;
+            warmupSets2.push({type:'warmup',weight:pf2,reps:getWarmupReps(wi,warmupCount2),logged:false});
+        }
+        var workingSets2=[];
+        for(var wj=0;wj<workingCount2;wj++){
+            var pw2=lastData2&&lastData2.sets?lastData2.sets.filter(function(s){return s.type==='working';})[wj]:null;
+            workingSets2.push({type:'working',weight:targetW2||(pw2?pw2.weight:null),reps:data.targetReps||(pw2?pw2.reps:null),targetRir:null,rir:'',note:'',logged:false});
+        }
+        var newEx2={exerciseId:'added_'+uid(),exerciseName:data.name,exerciseType:data.exerciseType||'other',notes:data.notes||'',supersetGroupId:null,sets:warmupSets2.concat(workingSets2)};
+        activeSession.exercises.push(newEx2);
+        upsertLibraryEntry(data);
+        saveActiveSession();
+        document.getElementById('modal-exercise').dataset.context='';
+        closeModal('modal-exercise');
+        renderSessionExercises();
+        updateSessionProgress();
+        showToast(currentLang==='cs'?'Cvik přidán!':'Exercise added!','success');
+        return;
+    }
     const w=getWorkout(currentWorkoutId); if(!w)return;
     if(editingExerciseId){const ex=w.exercises.find(e=>e.id===editingExerciseId);if(ex)Object.assign(ex,data);showToast(t('save')+'!','success');}
     else{w.exercises.push({id:uid(),...data});showToast(t('addExercise')+'!','success');}
@@ -2738,5 +2831,8 @@ document.addEventListener('focusin',e=>{
 applyTranslations();
 renderDashboard();
 </script>
+
+    <!-- Shared exercise options menu - lives in body to avoid CSS transform/overflow clipping -->
+    <div id="session-ex-menu" style="display:none;position:fixed;z-index:9999;background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius-md);box-shadow:var(--shadow);min-width:200px;overflow:hidden;"></div>
 </body>
 </html>
