@@ -572,6 +572,17 @@
                 <button class="btn btn-secondary btn-sm" onclick="exportData()" data-i18n="export">Export</button>
             </div>
             <div class="divider"></div>
+            <div class="flex-between" style="margin-bottom:12px;">
+                <div><div class="font-bold" style="margin-bottom:2px;" data-i18n="exportTemplates">Export Workouts</div><div class="text-sm text-secondary" data-i18n="exportTemplatesDesc">Export workout templates and exercises</div></div>
+                <button class="btn btn-secondary btn-sm" onclick="exportTemplates()" data-i18n="export">Export</button>
+            </div>
+            <div class="divider"></div>
+            <div class="flex-between" style="margin-bottom:12px;">
+                <div><div class="font-bold" style="margin-bottom:2px;" data-i18n="importTemplates">Import Workouts</div><div class="text-sm text-secondary" data-i18n="importTemplatesDesc">Load shared workout templates and exercises</div></div>
+                <button class="btn btn-secondary btn-sm" onclick="triggerTemplateImport()" data-i18n="import">Import</button>
+                <input type="file" id="template-import-file" style="display:none;" onchange="importTemplates(event)" accept=".json">
+            </div>
+            <div class="divider"></div>
             <div class="flex-between">
                 <div><div class="font-bold" style="margin-bottom:2px;" data-i18n="resetData">Reset All Data</div><div class="text-sm text-secondary" data-i18n="resetDesc">Permanently delete everything</div></div>
                 <button class="btn btn-danger btn-sm" onclick="confirmReset()" data-i18n="reset">Reset</button>
@@ -836,6 +847,13 @@ const TRANSLATIONS = {
         finish:'Finish', cancelWorkout:'Cancel', finishWorkout:'Finish Workout',
         sessionNotes:'Session Notes', history:'History', settings:'Settings',
         data:'Data', exportData:'Export Data', exportDesc:'Download all your workout data',
+        exportTemplates:'Export Workouts',
+        exportTemplatesDesc:'Export your workout templates and exercise definitions.',
+        importTemplates:'Import Workouts',
+        importTemplatesDesc:'Load workout templates from a shared JSON file.',
+        importSuccess:'Workouts and exercises successfully imported! 💪',
+        importError:'Invalid workout template file.',
+        import:'Import',
         export:'Export', resetData:'Reset All Data', resetDesc:'Permanently delete everything',
         reset:'Reset', about:'About', localData:'All data stored locally on your device.',
         navWorkouts:'Workouts', navHistory:'History', navProgress:'Progress', navCalculator:'Calc', navLibrary:'Library',
@@ -903,6 +921,13 @@ const TRANSLATIONS = {
         finish:'Dokončit', cancelWorkout:'Zrušit', finishWorkout:'Dokončit trénink',
         sessionNotes:'Poznámky k tréninku', history:'Historie', settings:'Nastavení',
         data:'Data', exportData:'Exportovat data', exportDesc:'Stáhnout všechna data',
+        exportTemplates:'Exportovat tréninky',
+        exportTemplatesDesc:'Exportujte své šablony tréninků a definice cviků.',
+        importTemplates:'Importovat tréninky',
+        importTemplatesDesc:'Načíst šablony tréninků ze sdíleného JSON souboru.',
+        importSuccess:'Tréninky a cviky byly úspěšně importovány! 💪',
+        importError:'Neplatný soubor šablon tréninků.',
+        import:'Importovat',
         export:'Exportovat', resetData:'Smazat vše', resetDesc:'Trvale smazat vše',
         reset:'Smazat', about:'O aplikaci', localData:'Vše uloženo lokálně v zařízení.',
         navWorkouts:'Tréninky', navHistory:'Historie', navProgress:'Pokrok', navCalculator:'Kalk.', navLibrary:'Knihovna',
@@ -2800,6 +2825,76 @@ function runStandaloneCalculator(){
 // ── SETTINGS ──
 function exportData(){ const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.
 download=`workout-tracker-${new Date().toISOString().split('T')[0]}.json`;a.click();URL.revokeObjectURL(url);showToast(t('export')+'!','success'); }
+
+function exportTemplates(){
+    const exportObj = {
+        version: 'workout_templates_v1',
+        workouts: db.workouts.map(w => {
+            const { mesoId, ...cleanWorkout } = w;
+            return cleanWorkout;
+        }),
+        library: db.library.filter(libEx => {
+            return db.workouts.some(w => w.exercises.some(we => we.name.toLowerCase().trim() === libEx.name.toLowerCase().trim()));
+        })
+    };
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `workout-templates-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(t('export') + '!', 'success');
+}
+
+function triggerTemplateImport(){
+    document.getElementById('template-import-file').click();
+}
+
+function importTemplates(event){
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+        try {
+            const imported = JSON.parse(e.target.result);
+            if(!imported || !Array.isArray(imported.workouts)){
+                showToast(t('importError'), 'error');
+                return;
+            }
+            const activeMeso = getActiveMeso();
+            const activeMesoId = activeMeso ? activeMeso.id : null;
+            if(Array.isArray(imported.library)){
+                imported.library.forEach(libEx => {
+                    upsertLibraryEntry(libEx);
+                });
+            }
+            imported.workouts.forEach(w => {
+                const newWorkoutId = uid();
+                const newExercises = (w.exercises || []).map(ex => {
+                    return {
+                        ...ex,
+                        id: uid()
+                    };
+                });
+                db.workouts.push({
+                    id: newWorkoutId,
+                    mesoId: activeMesoId,
+                    name: w.name || 'Imported Workout',
+                    exercises: newExercises
+                });
+            });
+            saveDB();
+            showToast(t('importSuccess'), 'success');
+            if(currentPage === 'dashboard') renderDashboard();
+            if(currentPage === 'library') renderLibrary();
+        } catch(err) {
+            showToast(t('importError'), 'error');
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
 function confirmReset(){ openConfirm(t('resetData'),t('resetDesc'),()=>{db=getDefaultDB();saveDB();clearActiveSession();navigateTo('dashboard');showToast(t('reset')+'!','success');},t('reset'),'btn-danger'); }
 
 // ── HELPERS ──
