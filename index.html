@@ -590,7 +590,7 @@
         </div>
         <div class="section-title" data-i18n="about">About</div>
         <div class="card">
-            <div class="text-sm text-secondary"><strong style="color:var(--text-primary);">Workout Tracker v5.91</strong><br>1RM: Epley formula.<br><span data-i18n="localData">All data stored locally on your device.</span></div>
+            <div class="text-sm text-secondary"><strong style="color:var(--text-primary);">Workout Tracker v5.9.1</strong><br>1RM: Epley formula.<br><span data-i18n="localData">All data stored locally on your device.</span></div>
         </div>
     </div>
 
@@ -1128,7 +1128,7 @@ function saveActiveSession(){ activeSession?localStorage.setItem(SESSION_KEY,JSO
 function clearActiveSession(){ activeSession=null;localStorage.removeItem(SESSION_KEY); }
 
 // ── NAVIGATION ──
-let currentPage='dashboard', currentWorkoutId=null, editingExerciseId=null, editingWorkoutId=null, editingMesoId=null;
+let currentPage='dashboard', currentWorkoutId=null, editingExerciseId=null, editingWorkoutId=null, editingMesoId=null, editingLibraryExerciseName=null;
 let calcModalWorkoutId=null, calcModalExerciseId=null;
 let pendingAdjustReps=null, pendingAdjustExerciseId=null, pendingAdjustWorkoutId=null;
 let editingSessionId=null, savingToLibraryOnly=false;
@@ -1972,6 +1972,7 @@ function openEditLibraryExerciseModal(name){
     const entry=getLibraryEntry(name); if(!entry)return;
     savingToLibraryOnly=true; editingExerciseId=null;
     resetExerciseForm();
+    editingLibraryExerciseName=entry.name;
     document.getElementById('modal-exercise-title').textContent=name;
     document.getElementById('exercise-name-input').value=entry.name;
     document.getElementById('exercise-type').value=entry.exerciseType||'other';
@@ -2626,7 +2627,7 @@ function resetExerciseForm(){
     document.getElementById('exercise-source-selector').style.display='none';
     document.getElementById('exercise-form').style.display='block';
     document.getElementById('exercise-library-picker').style.display='none';
-    selectedPrimary=[]; selectedSecondary=[];
+    selectedPrimary=[]; selectedSecondary=[]; editingLibraryExerciseName=null;
 }
 function openAddExerciseModal(){
     savingToLibraryOnly=false; editingExerciseId=null;
@@ -2702,7 +2703,74 @@ function saveExercise(){
             targetWeight:document.getElementById('exercise-target-weight').value!==''?parseFloat(document.getElementById('exercise-target-weight').value):null
         });
     }
-    if(savingToLibraryOnly){ upsertLibraryEntry(data);saveDB();closeModal('modal-exercise');renderLibrary();showToast(currentLang==='cs'?'Cvik přidán!':'Exercise added!','success');return; }
+    if(savingToLibraryOnly){
+        if(editingLibraryExerciseName){
+            const oldName=editingLibraryExerciseName;
+            const newName=data.name;
+            const existing=getLibraryEntry(oldName);
+            if(existing){
+                existing.name=newName;
+                existing.exerciseType=data.exerciseType;
+                existing.primaryMuscle=data.primaryMuscle;
+                existing.primaryMuscles=[...(data.primaryMuscles||[])];
+                existing.secondaryMuscles=[...(data.secondaryMuscles||[])];
+                existing.notes=data.notes;
+                
+                if(oldName.toLowerCase().trim()!==newName.toLowerCase().trim()){
+                    db.workouts.forEach(w=>{
+                        if(w.exercises){
+                            w.exercises.forEach(ex=>{
+                                if(ex.name&&ex.name.toLowerCase().trim()===oldName.toLowerCase().trim()){
+                                    ex.name=newName;
+                                    ex.exerciseType=data.exerciseType;
+                                    ex.primaryMuscle=data.primaryMuscle;
+                                    ex.primaryMuscles=[...(data.primaryMuscles||[])];
+                                    ex.secondaryMuscles=[...(data.secondaryMuscles||[])];
+                                    ex.notes=data.notes;
+                                }
+                            });
+                        }
+                    });
+                    db.sessions.forEach(s=>{
+                        if(s.exercises){
+                            s.exercises.forEach(ex=>{
+                                if(ex.exerciseName&&ex.exerciseName.toLowerCase().trim()===oldName.toLowerCase().trim()){
+                                    ex.exerciseName=newName;
+                                    ex.exerciseType=data.exerciseType;
+                                    ex.notes=data.notes;
+                                }
+                            });
+                        }
+                    });
+                    if(typeof activeSession!=='undefined'&&activeSession&&activeSession.exercises){
+                        activeSession.exercises.forEach(ex=>{
+                            if(ex.exerciseName&&ex.exerciseName.toLowerCase().trim()===oldName.toLowerCase().trim()){
+                                ex.exerciseName=newName;
+                                ex.exerciseType=data.exerciseType;
+                                ex.notes=data.notes;
+                            }
+                        });
+                        saveActiveSession();
+                    }
+                }
+            } else {
+                upsertLibraryEntry(data);
+            }
+            editingLibraryExerciseName=null;
+            saveDB();
+            closeModal('modal-exercise');
+            renderLibrary();
+            showToast(currentLang==='cs'?'Cvik upraven!':'Exercise updated!','success');
+            return;
+        } else {
+            upsertLibraryEntry(data);
+            saveDB();
+            closeModal('modal-exercise');
+            renderLibrary();
+            showToast(currentLang==='cs'?'Cvik přidán!':'Exercise added!','success');
+            return;
+        }
+    }
     // Handle replace-exercise-in-session context
     const exCtx=document.getElementById('modal-exercise').dataset.context;
     if(exCtx==='replace'&&replacingExIdx!==null&&activeSession){
